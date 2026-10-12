@@ -1,0 +1,23 @@
+{
+  "name": "pedidos-mozzarella-express",
+  "version": "1.0.0",
+  "description": "Portal de pedidos e inventario consolidado con Wansoft",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "mock": "node mock/wansoft-mock.js"
+  },
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "express": "^5.3.0",
+    "fast-xml-parser": "^5.11.2",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.1"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "private": true
+}

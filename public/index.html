@@ -1,0 +1,1224 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pedidos Mozzarella Express</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --masa:#F2F4F0; --papel:#FFFFFF; --tinta:#1B2A23; --tinta-2:#4C5E55; --tinta-3:#7B8B83;
+  --linea:#D9DFD8; --linea-2:#E8ECE6;
+  --albahaca:#2D6A4D; --albahaca-2:#235640; --albahaca-claro:#E3EFE7;
+  --tomate:#B93D2A; --tomate-claro:#F8E6E1;
+  --ambar:#B07614; --ambar-claro:#F7EDD8;
+  --azul:#2C5C86; --azul-claro:#E2ECF5;
+  --r-s:6px; --r-m:10px;
+  --sombra:0 1px 2px rgba(27,42,35,.06),0 8px 24px rgba(27,42,35,.08);
+  --display:'Bricolage Grotesque',system-ui,sans-serif;
+  --texto:'Instrument Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--masa);color:var(--tinta);font:15px/1.5 var(--texto);font-feature-settings:"tnum" 1;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--albahaca);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;letter-spacing:-.01em}
+h1{font-size:26px;line-height:1.15}
+h2{font-size:19px}
+h3{font-size:16px}
+a{color:var(--albahaca)}
+.oculto{display:none!important}
+.muted{color:var(--tinta-3)}
+.num{text-align:right;white-space:nowrap}
+
+/* ── Estructura ───────────────────────── */
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+.lateral{background:var(--tinta);color:#DCE6DF;padding:20px 14px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
+.marca{display:flex;gap:10px;align-items:center;padding:4px 8px 18px}
+.marca svg{flex:none}
+.marca b{font-family:var(--display);font-size:17px;line-height:1.1;color:#fff;display:block}
+.marca span{font-size:12px;color:#9DB1A5}
+.nav-grupo{font-size:12px;color:#8DA295;padding:14px 10px 4px}
+.nav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r-s);color:#DCE6DF;text-decoration:none;font-weight:500}
+.nav a:hover{background:rgba(255,255,255,.06)}
+.nav a.activo{background:var(--albahaca);color:#fff}
+.nav a .cuenta{margin-left:auto;font-size:12px;background:rgba(255,255,255,.14);padding:0 7px;border-radius:20px}
+.lateral .pie{margin-top:auto;padding:12px 10px 0;border-top:1px solid rgba(255,255,255,.1);font-size:13px}
+.lateral .pie b{display:block;color:#fff}
+.lateral .pie button{background:none;border:0;color:#9DB1A5;padding:4px 0;cursor:pointer;text-decoration:underline;margin-right:10px}
+.principal{padding:26px 32px 60px;min-width:0}
+.cabeza{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.cabeza .sub{color:var(--tinta-2);font-size:14px;margin-top:4px;max-width:70ch}
+.cabeza .acciones{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.btn.menu-movil{display:none}
+table.ancho{min-width:1150px}
+
+/* ── Controles ───────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--linea);background:var(--papel);padding:7px 13px;border-radius:var(--r-s);cursor:pointer;font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--tinta-3)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.primario{background:var(--albahaca);border-color:var(--albahaca);color:#fff}
+.btn.primario:hover{background:var(--albahaca-2)}
+.btn.peligro{color:var(--tomate);border-color:#E7C2B9}
+.btn.mini{padding:3px 9px;font-size:13px}
+.btn.texto{border-color:transparent;background:none;color:var(--albahaca);padding:4px 6px}
+input[type=text],input[type=number],input[type=password],input[type=date],input[type=search],select,textarea{border:1px solid var(--linea);background:var(--papel);border-radius:var(--r-s);padding:7px 10px;min-width:0}
+textarea{resize:vertical;width:100%}
+label.campo{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--tinta-2);font-weight:500}
+label.campo > input,label.campo > select,label.campo > textarea{font-size:15px;color:var(--tinta);font-weight:400}
+.filtros{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.filtros input[type=search]{width:260px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--linea);background:var(--papel);border-radius:20px;padding:4px 12px;font-size:13px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--tinta);border-color:var(--tinta);color:#fff}
+
+/* ── Tablas ───────────────────────── */
+.caja{background:var(--papel);border:1px solid var(--linea);border-radius:var(--r-m);overflow:hidden}
+.tabla-scroll{overflow:auto}
+table{border-collapse:collapse;width:100%}
+th,td{padding:9px 12px;border-bottom:1px solid var(--linea-2);text-align:left;vertical-align:middle}
+th{font-size:12.5px;font-weight:600;color:var(--tinta-2);background:#F8F9F7;white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+tbody tr.clic{cursor:pointer}
+tbody tr.clic:hover td{background:#F6F8F5}
+.vacio{padding:40px 20px;text-align:center;color:var(--tinta-2)}
+.vacio b{display:block;font-family:var(--display);font-size:18px;color:var(--tinta);margin-bottom:4px}
+
+/* ── Matriz consolidada (lo distintivo) ───────────── */
+.matriz{max-height:calc(100vh - 230px)}
+.matriz table{width:max-content;min-width:100%}
+.matriz th,.matriz td{border-right:1px solid var(--linea-2);padding:0}
+.matriz thead th{position:sticky;top:0;z-index:2;padding:0}
+.matriz .col-prod{position:sticky;left:0;z-index:1;background:var(--papel);width:280px;min-width:280px;max-width:280px;padding:8px 12px;box-shadow:1px 0 0 var(--linea)}
+.matriz thead .col-prod{z-index:3;background:#F8F9F7}
+.matriz .col-total{position:sticky;left:280px;z-index:1;background:#F3F7F4;box-shadow:1px 0 0 var(--linea)}
+.matriz thead .col-total{z-index:3}
+.matriz .suc-h{writing-mode:vertical-rl;transform:rotate(180deg);height:150px;width:46px;padding:10px 0;display:flex;align-items:center;justify-content:flex-start;font-weight:500;font-size:12.5px;color:var(--tinta)}
+.matriz .suc-h.error{color:var(--tomate)}
+.matriz .total-h{padding:10px 12px;display:block;height:150px;display:flex;align-items:flex-end}
+.celda{display:block;width:100%;min-width:62px;border:0;background:transparent;padding:8px 8px;text-align:right;cursor:pointer;position:relative;font-size:14px}
+.celda:hover{outline:2px solid var(--albahaca);outline-offset:-2px}
+.celda.cero{color:var(--tinta-3)}
+.celda.neg{color:var(--tomate);font-weight:600}
+.celda .marca-aj{position:absolute;top:3px;left:4px;width:7px;height:7px;border-radius:50%;background:var(--ambar)}
+.celda .transito{display:block;font-size:11px;color:var(--azul);line-height:1}
+.matriz .nom{font-weight:500;line-height:1.25}
+.matriz .cod{font-size:12px;color:var(--tinta-3)}
+.matriz td.total{padding:8px 12px;text-align:right;font-weight:600}
+.leyenda{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--tinta-2);margin-top:10px}
+.leyenda i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:6px}
+
+/* ── Estados ───────────────────────── */
+.est{display:inline-block;padding:1px 9px;border-radius:20px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.est.borrador{background:#ECEFEA;color:var(--tinta-2)}
+.est.enviada{background:var(--azul-claro);color:var(--azul)}
+.est.recibida_parcial,.est.pendiente{background:var(--ambar-claro);color:var(--ambar)}
+.est.recibida,.est.capturado,.est.ok{background:var(--albahaca-claro);color:var(--albahaca-2)}
+.est.cancelada,.est.cancelado,.est.error{background:var(--tomate-claro);color:var(--tomate)}
+.barra{height:6px;background:var(--linea-2);border-radius:4px;overflow:hidden;min-width:70px}
+.barra i{display:block;height:100%;background:var(--albahaca)}
+.dif-neg{color:var(--tomate);font-weight:600}
+.dif-pos{color:var(--albahaca);font-weight:600}
+
+.resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:var(--linea);border:1px solid var(--linea);border-radius:var(--r-m);overflow:hidden;margin-bottom:16px}
+.resumen div{background:var(--papel);padding:12px 16px}
+.resumen b{display:block;font-family:var(--display);font-size:22px;font-weight:700}
+.resumen span{font-size:13px;color:var(--tinta-2)}
+
+/* ── Panel lateral y modales ───────────────────────── */
+.velo{position:fixed;inset:0;background:rgba(27,42,35,.35);z-index:40;display:flex;justify-content:flex-end}
+.panel{background:var(--masa);width:min(920px,100%);height:100%;overflow:auto;box-shadow:var(--sombra);display:flex;flex-direction:column;animation:entra .18s ease-out}
+.panel.angosto{width:min(560px,100%)}
+@keyframes entra{from{transform:translateX(24px);opacity:.6}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.panel{animation:none}}
+.panel-cab{padding:20px 24px 14px;background:var(--papel);border-bottom:1px solid var(--linea);display:flex;gap:12px;align-items:flex-start;position:sticky;top:0;z-index:2}
+.panel-cab .cerrar{margin-left:auto}
+.panel-cuerpo{padding:20px 24px;display:flex;flex-direction:column;gap:18px}
+.panel-pie{margin-top:auto;padding:14px 24px;background:var(--papel);border-top:1px solid var(--linea);display:flex;gap:8px;flex-wrap:wrap;position:sticky;bottom:0}
+.rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.pasos{display:flex;gap:0;list-style:none;padding:0;margin:0;font-size:13px}
+.pasos li{flex:1;padding:8px 0 0;border-top:3px solid var(--linea);color:var(--tinta-3);margin-right:4px}
+.pasos li.hecho{border-color:var(--albahaca);color:var(--tinta)}
+.pasos li.actual{border-color:var(--albahaca);color:var(--tinta);font-weight:600}
+.pasos li.cancelada{border-color:var(--tomate);color:var(--tomate);font-weight:600}
+.historial{list-style:none;padding:0;margin:0;border-left:2px solid var(--linea);padding-left:14px}
+.historial li{margin-bottom:10px;font-size:14px;position:relative}
+.historial li::before{content:"";position:absolute;left:-20px;top:7px;width:8px;height:8px;border-radius:50%;background:var(--albahaca)}
+.historial small{color:var(--tinta-3);display:block}
+.buscador{position:relative}
+.buscador .resultados{position:absolute;top:100%;left:0;right:0;background:var(--papel);border:1px solid var(--linea);border-radius:var(--r-s);box-shadow:var(--sombra);z-index:5;max-height:300px;overflow:auto;margin-top:4px}
+.buscador .resultados button{display:flex;width:100%;gap:10px;text-align:left;padding:8px 12px;border:0;background:none;cursor:pointer;border-bottom:1px solid var(--linea-2)}
+.buscador .resultados button:hover,.buscador .resultados button:focus{background:var(--albahaca-claro)}
+.buscador .resultados .ex{margin-left:auto;color:var(--tinta-2);font-size:13px;white-space:nowrap}
+td input[type=number]{width:100px;text-align:right}
+.aviso{padding:10px 14px;border-radius:var(--r-s);font-size:14px;background:var(--azul-claro);color:#1E4466}
+.aviso.alerta{background:var(--ambar-claro);color:#6D4A0C}
+.aviso.error{background:var(--tomate-claro);color:#7E2516}
+
+.popover{position:fixed;z-index:30;background:var(--papel);border:1px solid var(--linea);border-radius:var(--r-m);box-shadow:var(--sombra);padding:12px 14px;width:270px;font-size:14px}
+.popover .acc{display:flex;gap:6px;margin-top:10px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--tinta);color:#fff;padding:10px 18px;border-radius:var(--r-s);z-index:60;box-shadow:var(--sombra);max-width:90vw}
+.toast.error{background:var(--tomate)}
+.carga{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:gira .7s linear infinite;vertical-align:-2px}
+@keyframes gira{to{transform:rotate(360deg)}}
+
+/* ── Login ───────────────────────── */
+.login{min-height:100vh;display:grid;grid-template-columns:1.1fr 1fr}
+.login .lado{background:var(--tinta);color:#E2EBE5;padding:48px;display:flex;flex-direction:column;justify-content:space-between}
+.login .lado h1{font-size:44px;color:#fff;max-width:11ch;line-height:1.02}
+.login .lado p{max-width:42ch;color:#AFC2B6}
+.login form{align-self:center;justify-self:center;width:min(360px,90%);display:flex;flex-direction:column;gap:14px}
+
+/* ── Impresión de orden ───────────────────────── */
+#impresion{display:none}
+@media print{
+  body *{visibility:hidden}
+  #impresion,#impresion *{visibility:visible}
+  #impresion{display:block;position:absolute;inset:0;padding:24px;font-size:12px}
+  #impresion table{border:1px solid #999}
+  #impresion th,#impresion td{border:1px solid #ccc;padding:5px 8px}
+}
+
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .lateral{position:fixed;inset:0 30% 0 0;z-index:50;height:100%;transform:translateX(-100%);transition:transform .2s}
+  .lateral.abierto{transform:none}
+  .btn.menu-movil{display:inline-flex}
+  .principal{padding:16px 16px 60px}
+  .login{grid-template-columns:1fr}
+  .login .lado{padding:28px}
+  .login .lado h1{font-size:32px}
+  .filtros input[type=search]{width:100%}
+  .matriz .col-total{position:static}
+  .matriz .col-prod{min-width:170px}
+}
+</style>
+</head>
+<body>
+<div id="raiz"></div>
+<div id="impresion"></div>
+
+<script>
+'use strict';
+// ════════════════════════════════════════════════════════════════
+//  Utilidades
+// ════════════════════════════════════════════════════════════════
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const n0 = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 });
+const mx = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+const fmt = v => (v == null || v === '' ? '—' : n0.format(Number(v)));
+const dinero = v => (v == null ? '—' : mx.format(Number(v)));
+const fecha = v => v ? new Date(v).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+const fechaHora = v => v ? new Date(v).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+const hace = v => {
+  if (!v) return 'nunca';
+  const m = Math.round((Date.now() - new Date(v)) / 60000);
+  if (m < 1) return 'hace un momento';
+  if (m < 60) return `hace ${m} min`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `hace ${h} h`;
+  return fecha(v);
+};
+const ESTADO_OC = { borrador: 'Borrador', enviada: 'Enviada', recibida_parcial: 'Recibida parcial', recibida: 'Recibida', cancelada: 'Cancelada' };
+const ESTADO_AJ = { pendiente: 'Pendiente en Wansoft', capturado: 'Capturado en Wansoft', cancelado: 'Cancelado' };
+const ROLES = { admin: 'Administrador', compras: 'Compras', sucursal: 'Sucursal' };
+
+const S = {
+  token: null, user: null, sucursales: [], proveedores: [], motivos: [],
+  vista: 'inventario', consolidado: null,
+  filtroInv: { q: '', departamento: '', grupo: 'todas', modo: 'sucursales' },
+};
+try { S.token = localStorage.getItem('mz_token'); } catch {}
+
+async function api(ruta, opts = {}) {
+  const res = await fetch('/api' + ruta, {
+    method: opts.method || 'GET',
+    headers: { 'Content-Type': 'application/json', ...(S.token ? { Authorization: 'Bearer ' + S.token } : {}) },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  let data = null;
+  try { data = await res.json(); } catch {}
+  if (res.status === 401 && S.token && !ruta.startsWith('/auth/login')) { salir(); throw new Error(data?.error || 'Sesión expirada'); }
+  if (!res.ok) throw new Error(data?.error || `Error ${res.status}`);
+  return data;
+}
+
+function toast(msg, tipo) {
+  const t = document.createElement('div');
+  t.className = 'toast' + (tipo === 'error' ? ' error' : '');
+  t.setAttribute('role', 'status');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), tipo === 'error' ? 5000 : 2600);
+}
+
+// Ejecuta una acción con botón ocupado y avisa errores
+async function accion(btn, fn) {
+  const txt = btn?.innerHTML;
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="carga"></span> ' + txt; }
+  try { return await fn(); }
+  catch (e) { toast(e.message, 'error'); }
+  finally { if (btn && btn.isConnected) { btn.disabled = false; btn.innerHTML = txt; } }
+}
+
+const esAdmin = () => S.user?.rol === 'admin';
+const esCompras = () => ['admin', 'compras'].includes(S.user?.rol);
+
+function opcionesSucursal(sel, vacia = 'Elige una sucursal') {
+  return `<option value="">${esc(vacia)}</option>` + S.sucursales.filter(s => s.activa).map(s =>
+    `<option value="${s.id}" ${String(sel) === String(s.id) ? 'selected' : ''}>${esc(s.nombre)}</option>`).join('');
+}
+function opcionesProveedor(sel) {
+  return `<option value="">Sin proveedor</option>` + S.proveedores.filter(p => p.activo || p.id == sel).map(p =>
+    `<option value="${p.id}" ${String(sel) === String(p.id) ? 'selected' : ''}>${esc(p.nombre)}</option>`).join('');
+}
+
+// Grupos de sucursales según su nombre
+function grupoDe(nombre) {
+  if (/^PTG/i.test(nombre)) return 'ptg';
+  if (/mozar|mozz/i.test(nombre)) return 'mozzarella';
+  return 'otras';
+}
+const GRUPOS = [['todas', 'Todas'], ['mozzarella', 'Mozzarella'], ['ptg', 'PTG'], ['otras', 'Otras']];
+
+// ════════════════════════════════════════════════════════════════
+//  Panel lateral (detalle / formularios)
+// ════════════════════════════════════════════════════════════════
+let panelPrevFocus = null;
+function abrirPanel(html, { angosto = false } = {}) {
+  cerrarPanel();
+  panelPrevFocus = document.activeElement;
+  const v = document.createElement('div');
+  v.className = 'velo';
+  v.id = 'velo';
+  v.innerHTML = `<div class="panel ${angosto ? 'angosto' : ''}" role="dialog" aria-modal="true">${html}</div>`;
+  v.addEventListener('mousedown', e => { if (e.target === v) cerrarPanel(); });
+  document.body.appendChild(v);
+  const f = v.querySelector('input,select,textarea,button:not(.cerrar)');
+  f && f.focus();
+  return v.firstElementChild;
+}
+function cerrarPanel() {
+  const v = $('#velo');
+  if (v) { v.remove(); panelPrevFocus?.focus?.(); }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { cerrarPopover(); cerrarPanel(); } });
+const botonCerrar = `<button class="btn texto cerrar" onclick="cerrarPanel()" aria-label="Cerrar">Cerrar</button>`;
+
+// ════════════════════════════════════════════════════════════════
+//  Buscador de productos (reutilizable)
+// ════════════════════════════════════════════════════════════════
+function montarBuscador(cont, { sucursal, alElegir }) {
+  cont.innerHTML = `<div class="buscador"><input type="search" placeholder="Busca por nombre o código" style="width:100%" aria-label="Buscar producto"><div class="resultados oculto"></div></div>`;
+  const inp = $('input', cont), res = $('.resultados', cont);
+  let t, ult = [];
+  const pintar = items => {
+    ult = items;
+    if (!items.length) { res.innerHTML = `<div class="vacio" style="padding:14px">No hay productos con ese nombre. Sincroniza el inventario si es nuevo.</div>`; res.classList.remove('oculto'); return; }
+    res.innerHTML = items.map((p, i) => `<button type="button" data-i="${i}"><span><b>${esc(p.nombre || p.codigo)}</b><br><span class="muted">${esc(p.codigo)} · ${esc(p.unidad || '')}</span></span>
+      <span class="ex">${sucursal() ? 'En sucursal: ' + fmt(p.existencia_sucursal ?? 0) : 'Total: ' + fmt(p.total)}</span></button>`).join('');
+    res.classList.remove('oculto');
+  };
+  inp.addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(async () => {
+      const q = inp.value.trim();
+      if (q.length < 2) { res.classList.add('oculto'); return; }
+      try { pintar(await api(`/inventario/productos?q=${encodeURIComponent(q)}${sucursal() ? '&sucursal_id=' + sucursal() : ''}`)); }
+      catch (e) { toast(e.message, 'error'); }
+    }, 220);
+  });
+  res.addEventListener('click', e => {
+    const b = e.target.closest('button[data-i]');
+    if (!b) return;
+    alElegir(ult[b.dataset.i]);
+    inp.value = ''; res.classList.add('oculto'); inp.focus();
+  });
+  inp.addEventListener('keydown', e => { if (e.key === 'ArrowDown') { const b = $('button', res); b && b.focus(); e.preventDefault(); } });
+  document.addEventListener('mousedown', e => { if (!cont.contains(e.target)) res.classList.add('oculto'); });
+}
+
+// ════════════════════════════════════════════════════════════════
+//  Arranque y navegación
+// ════════════════════════════════════════════════════════════════
+async function iniciar() {
+  if (!S.token) return pintarLogin();
+  try {
+    S.user = await api('/auth/me');
+    await cargarCatalogos();
+    pintarApp();
+  } catch { pintarLogin(); }
+}
+async function cargarCatalogos() {
+  const [s, p, m] = await Promise.all([api('/sucursales'), api('/proveedores'), api('/ajustes/motivos')]);
+  S.sucursales = s.sucursales; S.proveedores = p; S.motivos = m;
+}
+function salir() {
+  S.token = null; S.user = null;
+  try { localStorage.removeItem('mz_token'); } catch {}
+  cerrarPanel();
+  pintarLogin();
+}
+
+function pintarLogin() {
+  $('#raiz').innerHTML = `
+  <div class="login">
+    <div class="lado">
+      <div class="marca" style="padding:0">${logo(34)}<div><b>Mozzarella Express</b><span>Pedidos e inventario</span></div></div>
+      <div>
+        <h1>Todas las sucursales en una sola vista.</h1>
+        <p>Consulta el inventario de Wansoft consolidado, registra ajustes y da seguimiento a cada orden de compra hasta que llegue.</p>
+      </div>
+      <span class="muted" style="font-size:13px">Datos tomados de Wansoft</span>
+    </div>
+    <form id="f-login">
+      <h2>Iniciar sesión</h2>
+      <label class="campo">Usuario<input type="text" name="usuario" autocomplete="username" required></label>
+      <label class="campo">Contraseña<input type="password" name="password" autocomplete="current-password" required></label>
+      <div id="login-err" class="aviso error oculto" role="alert"></div>
+      <button class="btn primario" style="justify-content:center;padding:10px">Entrar</button>
+    </form>
+  </div>`;
+  $('#f-login').addEventListener('submit', async e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const btn = $('button', e.target);
+    btn.disabled = true;
+    try {
+      const r = await api('/auth/login', { method: 'POST', body: { usuario: fd.get('usuario'), password: fd.get('password') } });
+      S.token = r.token; S.user = r.user;
+      try { localStorage.setItem('mz_token', r.token); } catch {}
+      await cargarCatalogos();
+      pintarApp();
+    } catch (err) {
+      const el = $('#login-err'); el.textContent = err.message; el.classList.remove('oculto');
+    } finally { btn.disabled = false; }
+  });
+  $('[name=usuario]').focus();
+}
+
+function logo(size = 30) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 40 40" aria-hidden="true">
+    <circle cx="20" cy="20" r="18" fill="#E9B44C"/><circle cx="20" cy="20" r="14.5" fill="#F6E7C1"/>
+    <circle cx="14" cy="15" r="3" fill="#B93D2A"/><circle cx="25" cy="13" r="2.6" fill="#B93D2A"/><circle cx="23" cy="25" r="3.2" fill="#B93D2A"/><circle cx="13.5" cy="25" r="2.2" fill="#B93D2A"/>
+    <path d="M17 20.5c1.5-1 2.8-.9 4 .2" stroke="#2D6A4D" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
+}
+
+const VISTAS = [
+  { id: 'inventario', t: 'Inventario', grupo: 'Operación' },
+  { id: 'ordenes', t: 'Órdenes de compra', grupo: 'Operación' },
+  { id: 'ajustes', t: 'Ajustes', grupo: 'Operación' },
+  { id: 'proveedores', t: 'Proveedores', grupo: 'Operación' },
+  { id: 'sucursales', t: 'Sucursales y Wansoft', grupo: 'Administración', admin: true },
+  { id: 'usuarios', t: 'Usuarios', grupo: 'Administración', admin: true },
+  { id: 'diagnostico', t: 'Diagnóstico Wansoft', grupo: 'Administración', admin: true },
+  { id: 'bitacora', t: 'Bitácora', grupo: 'Administración', admin: true },
+];
+
+function pintarApp() {
+  let grupo = '';
+  const nav = VISTAS.filter(v => !v.admin || esAdmin()).map(v => {
+    const g = v.grupo !== grupo ? `<div class="nav-grupo">${esc(v.grupo)}</div>` : '';
+    grupo = v.grupo;
+    return g + `<a href="#${v.id}" data-v="${v.id}">${esc(v.t)}</a>`;
+  }).join('');
+  $('#raiz').innerHTML = `
+  <div class="app">
+    <aside class="lateral" id="lateral">
+      <div class="marca">${logo()}<div><b>Mozzarella Express</b><span>Pedidos e inventario</span></div></div>
+      <nav class="nav" aria-label="Secciones">${nav}</nav>
+      <div class="pie"><b>${esc(S.user.nombre)}</b><span>${esc(ROLES[S.user.rol])}</span><br>
+        <button onclick="cambiarPassword()">Cambiar contraseña</button><button onclick="salir()">Salir</button></div>
+    </aside>
+    <main class="principal" id="vista"></main>
+  </div>`;
+  const destino = location.hash.slice(1);
+  ir(VISTAS.some(v => v.id === destino && (!v.admin || esAdmin())) ? destino : 'inventario');
+}
+window.addEventListener('hashchange', () => {
+  const v = location.hash.slice(1);
+  if (S.user && v && v !== S.vista && VISTAS.some(x => x.id === v)) ir(v);
+});
+
+function ir(v) {
+  S.vista = v;
+  if (location.hash.slice(1) !== v) history.replaceState(null, '', '#' + v);
+  $$('.nav a').forEach(a => a.classList.toggle('activo', a.dataset.v === v));
+  $('#lateral')?.classList.remove('abierto');
+  cerrarPopover();
+  const fn = { inventario: vInventario, ordenes: vOrdenes, ajustes: vAjustes, proveedores: vProveedores, sucursales: vSucursales, usuarios: vUsuarios, diagnostico: vDiagnostico, bitacora: vBitacora }[v];
+  fn();
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest('.nav a[data-v]');
+  if (a) { e.preventDefault(); ir(a.dataset.v); }
+});
+
+function cabeza(titulo, sub, acciones = '') {
+  return `<div class="cabeza">
+    <button class="btn menu-movil" onclick="$('#lateral').classList.toggle('abierto')" aria-label="Menú">Menú</button>
+    <div><h1>${esc(titulo)}</h1>${sub ? `<div class="sub">${sub}</div>` : ''}</div>
+    <div class="acciones">${acciones}</div></div>`;
+}
+
+// ════════════════════════════════════════════════════════════════
+//  Vista: Inventario consolidado
+// ════════════════════════════════════════════════════════════════
+async function vInventario() {
+  const conClaves = S.sucursales.filter(s => s.wansoft_id && s.tiene_password);
+  const ultimo = S.sucursales.map(s => s.ultimo_sync).filter(Boolean).sort().pop();
+  const conError = S.sucursales.filter(s => s.ultimo_error && s.activa);
+  $('#vista').innerHTML = cabeza('Inventario consolidado',
+    `Existencias de Wansoft por sucursal. Última actualización ${esc(hace(ultimo))}.` +
+    (conError.length ? ` <a href="#sucursales">${conError.length} sucursal${conError.length > 1 ? 'es' : ''} con error</a>.` : ''),
+    `${esCompras() ? `<button class="btn" id="b-sync">Actualizar desde Wansoft</button>` : ''}
+     <button class="btn" id="b-csv">Descargar CSV</button>
+     <button class="btn primario" id="b-pedir">Nueva orden de compra</button>`) +
+  `<div class="filtros">
+     <input type="search" id="f-q" placeholder="Buscar producto o código" value="${esc(S.filtroInv.q)}" aria-label="Buscar producto">
+     <select id="f-dep" aria-label="Departamento"><option value="">Todos los departamentos</option></select>
+     ${S.user.rol !== 'sucursal' ? `<div class="chips" role="group" aria-label="Grupo de sucursales">${GRUPOS.map(([k, t]) =>
+        `<button class="chip" data-g="${k}" aria-pressed="${S.filtroInv.grupo === k}">${t}</button>`).join('')}</div>` : ''}
+     <div class="chips" role="group" aria-label="Vista" style="margin-left:auto">
+       <button class="chip" data-m="sucursales" aria-pressed="${S.filtroInv.modo === 'sucursales'}">Por sucursal</button>
+       <button class="chip" data-m="totales" aria-pressed="${S.filtroInv.modo === 'totales'}">Solo totales</button>
+     </div>
+   </div>
+   <div id="inv-cont"><div class="vacio"><span class="carga"></span></div></div>`;
+
+  if (!conClaves.length && esAdmin()) {
+    $('#inv-cont').innerHTML = `<div class="caja vacio"><b>Todavía no hay sucursales conectadas</b>Agrega el ID y la contraseña de Wansoft de cada sucursal para traer su inventario.<br><br><button class="btn primario" onclick="ir('sucursales')">Conectar sucursales</button></div>`;
+  }
+
+  $('#b-sync')?.addEventListener('click', e => accion(e.currentTarget, async () => {
+    toast('Consultando Wansoft, puede tardar un par de minutos…');
+    const r = await api('/sucursales/sync', { method: 'POST' });
+    const ok = r.resultados.filter(x => x.ok).length, mal = r.resultados.length - ok;
+    toast(`Inventario actualizado en ${ok} sucursal${ok === 1 ? '' : 'es'}${mal ? ` · ${mal} con error` : ''}`, mal ? 'error' : null);
+    await cargarCatalogos(); vInventario();
+  }));
+  $('#b-csv').addEventListener('click', descargarCSV);
+  $('#b-pedir').addEventListener('click', () => editorOrden());
+  let t;
+  $('#f-q').addEventListener('input', e => { clearTimeout(t); t = setTimeout(() => { S.filtroInv.q = e.target.value; cargarConsolidado(); }, 250); });
+  $('#f-dep').addEventListener('change', e => { S.filtroInv.departamento = e.target.value; cargarConsolidado(); });
+  $$('[data-g]').forEach(b => b.addEventListener('click', () => { S.filtroInv.grupo = b.dataset.g; $$('[data-g]').forEach(x => x.setAttribute('aria-pressed', x === b)); pintarMatriz(); }));
+  $$('[data-m]').forEach(b => b.addEventListener('click', () => { S.filtroInv.modo = b.dataset.m; $$('[data-m]').forEach(x => x.setAttribute('aria-pressed', x === b)); pintarMatriz(); }));
+  if (conClaves.length || !esAdmin()) cargarConsolidado();
+}
+
+async function cargarConsolidado() {
+  try {
+    const p = new URLSearchParams({ q: S.filtroInv.q, departamento: S.filtroInv.departamento });
+    S.consolidado = await api('/inventario/consolidado?' + p);
+    const dep = $('#f-dep');
+    if (dep && dep.options.length <= 1) {
+      dep.innerHTML = '<option value="">Todos los departamentos</option>' + S.consolidado.departamentos.map(d => `<option ${d === S.filtroInv.departamento ? 'selected' : ''}>${esc(d)}</option>`).join('');
+    }
+    pintarMatriz();
+  } catch (e) { $('#inv-cont').innerHTML = `<div class="aviso error">${esc(e.message)}</div>`; }
+}
+
+function sucursalesVisibles() {
+  const d = S.consolidado;
+  // Solo sucursales conectadas: con inventario sincronizado o con error de conexión
+  const conDatos = new Set(d.productos.flatMap(p => Object.keys(p.por).map(Number)));
+  return d.sucursales.filter(s => (conDatos.has(s.id) || s.ultimo_error) &&
+    (S.filtroInv.grupo === 'todas' || grupoDe(s.nombre) === S.filtroInv.grupo));
+}
+
+function pintarMatriz() {
+  const d = S.consolidado;
+  if (!d || !$('#inv-cont')) return;
+  const sucs = sucursalesVisibles();
+  const ids = sucs.map(s => s.id);
+  const prods = d.productos.map(p => {
+    const total = ids.reduce((a, id) => a + (p.por[id] || 0), 0);
+    return { ...p, totalVis: total, valorVis: p.costo != null ? total * p.costo : null };
+  }).filter(p => ids.some(id => id in p.por));
+
+  if (!prods.length) {
+    $('#inv-cont').innerHTML = `<div class="caja vacio"><b>Sin productos</b>${S.filtroInv.q || S.filtroInv.departamento ? 'Ningún producto coincide con la búsqueda.' : 'Actualiza desde Wansoft para traer el inventario.'}</div>`;
+    return;
+  }
+  const valor = prods.reduce((a, p) => a + (p.valorVis || 0), 0);
+  const ajustes = prods.reduce((a, p) => a + Object.keys(p.ajuste).filter(id => ids.includes(+id)).length, 0);
+  const negativos = prods.reduce((a, p) => a + ids.filter(id => (p.por[id] || 0) < 0).length, 0);
+  const transito = prods.reduce((a, p) => a + Object.keys(p.transito).filter(id => ids.includes(+id)).length, 0);
+
+  const resumen = `<div class="resumen">
+    <div><b>${fmt(prods.length)}</b><span>Productos</span></div>
+    <div><b>${dinero(valor)}</b><span>Valor del inventario a costo</span></div>
+    <div><b>${fmt(sucs.length)}</b><span>Sucursales en la vista</span></div>
+    <div><b>${fmt(ajustes)}</b><span>Ajustes por capturar en Wansoft</span></div>
+    <div><b>${fmt(transito)}</b><span>Productos en camino</span></div>
+    ${negativos ? `<div><b style="color:var(--tomate)">${fmt(negativos)}</b><span>Existencias negativas</span></div>` : ''}
+  </div>`;
+
+  if (S.filtroInv.modo === 'totales') {
+    $('#inv-cont').innerHTML = resumen + `<div class="caja tabla-scroll"><table>
+      <thead><tr><th>Producto</th><th>Departamento</th><th>Unidad</th><th class="num">Existencia total</th><th class="num">Costo</th><th class="num">Valor</th><th class="num">Sucursales con existencia</th></tr></thead>
+      <tbody>${prods.map(p => `<tr><td><b>${esc(p.nombre || p.codigo)}</b><br><span class="muted">${esc(p.codigo)}</span></td>
+        <td>${esc(p.departamento || '—')}</td><td>${esc(p.unidad || '')}</td>
+        <td class="num ${p.totalVis < 0 ? 'dif-neg' : ''}"><b>${fmt(p.totalVis)}</b></td><td class="num">${dinero(p.costo)}</td><td class="num">${dinero(p.valorVis)}</td>
+        <td class="num">${ids.filter(id => (p.por[id] || 0) > 0).length} de ${ids.length}</td></tr>`).join('')}</tbody></table></div>`;
+    return;
+  }
+
+  // Sombreado por fila: más intenso donde hay más existencia
+  const celda = (p, s) => {
+    const v = p.por[s.id];
+    const aj = p.ajuste[s.id], tr = p.transito[s.id];
+    const max = Math.max(...ids.map(id => p.por[id] || 0), 1);
+    const a = v > 0 ? 0.08 + 0.42 * (v / max) : 0;
+    const bg = v > 0 ? `background:rgba(45,106,77,${a.toFixed(3)})` : '';
+    const cls = v == null ? 'cero' : v < 0 ? 'neg' : v === 0 ? 'cero' : '';
+    const tip = `${s.nombre}: ${v == null ? 'no lo maneja' : fmt(v) + ' ' + (p.unidad || '')}${aj ? ` · ajuste pendiente ${aj > 0 ? '+' : ''}${fmt(aj)}` : ''}${tr ? ` · en camino ${fmt(tr)}` : ''}`;
+    return `<td><button class="celda ${cls}" style="${bg}" data-c="${esc(p.codigo)}" data-s="${s.id}" title="${esc(tip)}" aria-label="${esc(p.nombre + ', ' + tip)}">
+      ${aj ? '<span class="marca-aj"></span>' : ''}${v == null ? '·' : fmt(v)}${tr ? `<span class="transito">+${fmt(tr)}</span>` : ''}</button></td>`;
+  };
+
+  $('#inv-cont').innerHTML = resumen + `<div class="caja tabla-scroll matriz"><table>
+    <thead><tr><th class="col-prod" style="vertical-align:bottom;padding:10px 12px">Producto</th>
+      <th class="col-total"><span class="total-h">Total</span></th>
+      ${sucs.map(s => `<th title="${esc(s.ultimo_error || 'Actualizado ' + hace(s.ultimo_sync))}"><span class="suc-h ${s.ultimo_error ? 'error' : ''}">${esc(s.nombre)}</span></th>`).join('')}
+    </tr></thead>
+    <tbody>${prods.map(p => `<tr>
+      <td class="col-prod"><div class="nom">${esc(p.nombre || p.codigo)}</div><div class="cod">${esc(p.codigo)} · ${esc(p.unidad || '')}</div></td>
+      <td class="col-total total ${p.totalVis < 0 ? 'dif-neg' : ''}">${fmt(p.totalVis)}</td>
+      ${sucs.map(s => celda(p, s)).join('')}</tr>`).join('')}</tbody></table></div>
+    <div class="leyenda"><span><i style="background:rgba(45,106,77,.45)"></i>Más existencia en la fila</span>
+      <span><i style="background:var(--ambar);border-radius:50%;width:8px;height:8px"></i>Ajuste pendiente de capturar</span>
+      <span style="color:var(--azul)">+n  en camino por órdenes enviadas</span><span>· la sucursal no maneja el producto</span></div>`;
+
+  $('#inv-cont .matriz').addEventListener('click', e => {
+    const b = e.target.closest('.celda');
+    if (b) popoverCelda(b);
+  });
+}
+
+let popEl = null;
+function cerrarPopover() { popEl?.remove(); popEl = null; }
+document.addEventListener('mousedown', e => { if (popEl && !popEl.contains(e.target) && !e.target.closest('.celda')) cerrarPopover(); });
+
+function popoverCelda(btn) {
+  cerrarPopover();
+  const p = S.consolidado.productos.find(x => x.codigo === btn.dataset.c);
+  const s = S.consolidado.sucursales.find(x => x.id === +btn.dataset.s);
+  const v = p.por[s.id];
+  popEl = document.createElement('div');
+  popEl.className = 'popover';
+  popEl.innerHTML = `<b>${esc(p.nombre || p.codigo)}</b><div class="muted">${esc(s.nombre)}</div>
+    <div style="margin-top:8px">Existencia en Wansoft: <b>${v == null ? 'no lo maneja' : fmt(v) + ' ' + esc(p.unidad || '')}</b></div>
+    ${p.ajuste[s.id] ? `<div>Ajuste pendiente: <b>${p.ajuste[s.id] > 0 ? '+' : ''}${fmt(p.ajuste[s.id])}</b></div>` : ''}
+    ${p.transito[s.id] ? `<div>En camino: <b>${fmt(p.transito[s.id])}</b></div>` : ''}
+    <div class="acc"><button class="btn mini" data-a="aj">Ajustar</button><button class="btn mini primario" data-a="oc">Pedir</button></div>`;
+  document.body.appendChild(popEl);
+  const r = btn.getBoundingClientRect();
+  popEl.style.top = Math.min(window.innerHeight - popEl.offsetHeight - 10, r.bottom + 6) + 'px';
+  popEl.style.left = Math.max(10, Math.min(window.innerWidth - 290, r.left - 100)) + 'px';
+  const prod = { codigo: p.codigo, nombre: p.nombre, unidad: p.unidad, costo: p.costo, existencia_sucursal: v ?? 0 };
+  popEl.querySelector('[data-a=aj]').onclick = () => { cerrarPopover(); editorAjuste(s.id, [prod]); };
+  popEl.querySelector('[data-a=oc]').onclick = () => { cerrarPopover(); editorOrden(null, { sucursal_id: s.id, lineas: [{ ...prod, cantidad: '', costo_unitario: p.costo || 0 }] }); };
+  popEl.querySelector('button').focus();
+}
+
+function descargarCSV() {
+  const d = S.consolidado;
+  if (!d) return;
+  const sucs = sucursalesVisibles();
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const filas = [['Código', 'Producto', 'Unidad', 'Departamento', 'Costo', 'Total', ...sucs.map(s => s.nombre)].map(q).join(',')];
+  for (const p of d.productos) {
+    const tot = sucs.reduce((a, s) => a + (p.por[s.id] || 0), 0);
+    filas.push([p.codigo, p.nombre, p.unidad, p.departamento, p.costo, tot, ...sucs.map(s => p.por[s.id] ?? '')].map(q).join(','));
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + filas.join('\n')], { type: 'text/csv' }));
+  a.download = `inventario-consolidado-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  Vista: Ajustes
+// ════════════════════════════════════════════════════════════════
+const fAj = { estado: 'pendiente', sucursal_id: '' };
+async function vAjustes() {
+  $('#vista').innerHTML = cabeza('Ajustes de inventario',
+    'Registra conteos y mermas por sucursal. Wansoft no recibe ajustes por su API, así que cada ajuste queda pendiente hasta que alguien lo capture allá y lo marque aquí.',
+    `<button class="btn primario" id="b-nuevo-aj">Nuevo ajuste o conteo</button>`) +
+    `<div class="filtros">
+      <div class="chips" role="group" aria-label="Estado">${[['pendiente', 'Pendientes'], ['capturado', 'Capturados'], ['cancelado', 'Cancelados'], ['', 'Todos']].map(([k, t]) =>
+        `<button class="chip" data-e="${k}" aria-pressed="${fAj.estado === k}">${t}</button>`).join('')}</div>
+      <select id="aj-suc" aria-label="Sucursal">${opcionesSucursal(fAj.sucursal_id, 'Todas las sucursales')}</select>
+    </div><div id="aj-cont"><div class="vacio"><span class="carga"></span></div></div>`;
+  $('#b-nuevo-aj').onclick = () => editorAjuste();
+  $$('[data-e]').forEach(b => b.onclick = () => { fAj.estado = b.dataset.e; vAjustes(); });
+  $('#aj-suc').onchange = e => { fAj.sucursal_id = e.target.value; vAjustes(); };
+  try {
+    const p = new URLSearchParams(); if (fAj.estado) p.set('estado', fAj.estado); if (fAj.sucursal_id) p.set('sucursal_id', fAj.sucursal_id);
+    const rows = await api('/ajustes?' + p);
+    if (!rows.length) {
+      $('#aj-cont').innerHTML = `<div class="caja vacio"><b>${fAj.estado === 'pendiente' ? 'No hay ajustes pendientes' : 'Sin ajustes'}</b>Cuando hagas un conteo físico, captura aquí lo que encontraste.</div>`;
+      return;
+    }
+    const valor = rows.filter(r => r.estado === 'pendiente').reduce((a, r) => a + Number(r.diferencia) * Number(r.costo || 0), 0);
+    $('#aj-cont').innerHTML = (fAj.estado === 'pendiente' ? `<div class="resumen"><div><b>${rows.length}</b><span>Ajustes por capturar en Wansoft</span></div>
+      <div><b class="${valor < 0 ? 'dif-neg' : ''}">${dinero(valor)}</b><span>Impacto a costo</span></div>
+      <div><b>${rows.filter(r => r.coincide_wansoft).length}</b><span>Wansoft ya coincide</span></div></div>` : '') +
+      `<div class="caja tabla-scroll"><table class="ancho"><thead><tr><th>Folio</th><th>Sucursal</th><th>Producto</th><th class="num">Sistema</th><th class="num">Físico</th><th class="num">Diferencia</th><th class="num">Impacto</th><th>Motivo</th><th>Registró</th><th>Estado</th>${esCompras() ? '<th></th>' : ''}</tr></thead>
+      <tbody>${rows.map(r => `<tr>
+        <td style="white-space:nowrap"><b>${esc(r.folio)}</b></td><td>${esc(r.sucursal)}</td>
+        <td style="min-width:200px">${esc(r.nombre || r.codigo)}<br><span class="muted">${esc(r.codigo)}</span></td>
+        <td class="num">${fmt(r.existencia_sistema)}</td><td class="num">${fmt(r.existencia_fisica)}</td>
+        <td class="num ${r.diferencia < 0 ? 'dif-neg' : 'dif-pos'}">${r.diferencia > 0 ? '+' : ''}${fmt(r.diferencia)}</td>
+        <td class="num">${r.costo != null ? dinero(r.diferencia * r.costo) : '—'}</td>
+        <td>${esc(r.motivo)}${r.comentario ? `<br><span class="muted">${esc(r.comentario)}</span>` : ''}</td>
+        <td>${esc(r.creado_por_nombre || '')}<br><span class="muted">${fechaHora(r.creado_en)}</span></td>
+        <td><span class="est ${r.estado}">${ESTADO_AJ[r.estado]}</span>${r.coincide_wansoft ? '<br><span class="est ok" title="La existencia actual en Wansoft ya es igual al conteo físico">Wansoft ya coincide</span>' : ''}
+          ${r.resuelto_por_nombre ? `<br><span class="muted">${esc(r.resuelto_por_nombre)}, ${fechaHora(r.resuelto_en)}</span>` : ''}</td>
+        ${esCompras() ? `<td style="white-space:nowrap">${r.estado === 'pendiente'
+          ? `<button class="btn mini" data-aj="${r.id}" data-to="capturado">Marcar capturado</button> <button class="btn mini texto" data-aj="${r.id}" data-to="cancelado">Cancelar</button>`
+          : `<button class="btn mini texto" data-aj="${r.id}" data-to="pendiente">Regresar a pendiente</button>`}</td>` : ''}
+      </tr>`).join('')}</tbody></table></div>`;
+    $$('[data-aj]').forEach(b => b.onclick = () => accion(b, async () => {
+      await api(`/ajustes/${b.dataset.aj}`, { method: 'PATCH', body: { estado: b.dataset.to } });
+      toast(b.dataset.to === 'capturado' ? 'Ajuste marcado como capturado' : b.dataset.to === 'cancelado' ? 'Ajuste cancelado' : 'Ajuste regresado a pendiente');
+      vAjustes();
+    }));
+  } catch (e) { $('#aj-cont').innerHTML = `<div class="aviso error">${esc(e.message)}</div>`; }
+}
+
+function editorAjuste(sucId = '', inicial = []) {
+  const items = inicial.map(p => ({ ...p, fisica: '' }));
+  const misSucs = S.user.rol === 'sucursal' ? S.user.sucursales : null;
+  if (!sucId && misSucs?.length === 1) sucId = misSucs[0];
+  const panel = abrirPanel(`
+    <div class="panel-cab"><div><h2>Nuevo ajuste o conteo</h2><div class="muted">Captura la cantidad física que contaste. La diferencia contra Wansoft se calcula sola.</div></div>${botonCerrar}</div>
+    <div class="panel-cuerpo">
+      <div class="rejilla">
+        <label class="campo">Sucursal<select id="aj-s">${opcionesSucursal(sucId)}</select></label>
+        <label class="campo">Motivo<select id="aj-m">${S.motivos.map(m => `<option>${esc(m)}</option>`).join('')}</select></label>
+      </div>
+      <label class="campo">Comentario (opcional)<input type="text" id="aj-c" placeholder="Ej. conteo de cierre de mes"></label>
+      <div><label class="campo" style="margin-bottom:4px">Agregar producto</label><div id="aj-bus"></div></div>
+      <div class="caja tabla-scroll" id="aj-items"></div>
+    </div>
+    <div class="panel-pie"><button class="btn primario" id="aj-guardar">Guardar ajuste</button><button class="btn" onclick="cerrarPanel()">Cancelar</button><span class="muted" id="aj-res" style="align-self:center"></span></div>`, { angosto: false });
+
+  const pintar = () => {
+    if (!items.length) { $('#aj-items', panel).innerHTML = `<div class="vacio">Busca los productos que contaste.</div>`; $('#aj-res', panel).textContent = ''; return; }
+    $('#aj-items', panel).innerHTML = `<table><thead><tr><th>Producto</th><th class="num">En Wansoft</th><th class="num">Físico</th><th class="num">Diferencia</th><th></th></tr></thead><tbody>
+      ${items.map((it, i) => {
+        const dif = it.fisica === '' ? null : Number(it.fisica) - Number(it.existencia_sucursal || 0);
+        return `<tr><td><b>${esc(it.nombre || it.codigo)}</b><br><span class="muted">${esc(it.codigo)} · ${esc(it.unidad || '')}</span></td>
+        <td class="num">${fmt(it.existencia_sucursal ?? 0)}</td>
+        <td class="num"><input type="number" min="0" step="any" data-i="${i}" value="${esc(it.fisica)}" aria-label="Cantidad física de ${esc(it.nombre)}"></td>
+        <td class="num ${dif == null ? '' : dif < 0 ? 'dif-neg' : dif > 0 ? 'dif-pos' : ''}" data-dif="${i}">${dif == null ? '—' : (dif > 0 ? '+' : '') + fmt(dif)}</td>
+        <td><button class="btn mini texto" data-quitar="${i}">Quitar</button></td></tr>`;
+      }).join('')}</tbody></table>`;
+    $$('input[data-i]', panel).forEach(inp => inp.addEventListener('input', () => {
+      const it = items[inp.dataset.i]; it.fisica = inp.value;
+      const dif = it.fisica === '' ? null : Number(it.fisica) - Number(it.existencia_sucursal || 0);
+      const td = $(`[data-dif="${inp.dataset.i}"]`, panel);
+      td.textContent = dif == null ? '—' : (dif > 0 ? '+' : '') + fmt(dif);
+      td.className = 'num ' + (dif == null ? '' : dif < 0 ? 'dif-neg' : dif > 0 ? 'dif-pos' : '');
+    }));
+    $$('[data-quitar]', panel).forEach(b => b.onclick = () => { items.splice(b.dataset.quitar, 1); pintar(); });
+  };
+  const sel = $('#aj-s', panel);
+  montarBuscador($('#aj-bus', panel), {
+    sucursal: () => sel.value,
+    alElegir: p => {
+      if (!sel.value) return toast('Primero elige la sucursal', 'error');
+      if (items.some(x => x.codigo === p.codigo)) return toast('Ese producto ya está en la lista');
+      items.push({ ...p, fisica: '' }); pintar();
+      $(`input[data-i="${items.length - 1}"]`, panel)?.focus();
+    },
+  });
+  sel.onchange = async () => {
+    // Al cambiar de sucursal se recalcula lo que dice Wansoft
+    for (const it of items) {
+      const r = await api(`/inventario/productos?q=${encodeURIComponent(it.codigo)}&sucursal_id=${sel.value}`).catch(() => []);
+      it.existencia_sucursal = r.find(x => x.codigo === it.codigo)?.existencia_sucursal ?? 0;
+    }
+    pintar();
+  };
+  pintar();
+  $('#aj-guardar', panel).onclick = e => accion(e.currentTarget, async () => {
+    if (!sel.value) throw new Error('Elige la sucursal');
+    const conCant = items.filter(i => i.fisica !== '');
+    if (!conCant.length) throw new Error('Captura la cantidad física de al menos un producto');
+    const r = await api('/ajustes', { method: 'POST', body: {
+      sucursal_id: +sel.value, motivo: $('#aj-m', panel).value, comentario: $('#aj-c', panel).value,
+      items: conCant.map(i => ({ codigo: i.codigo, nombre: i.nombre, existencia_fisica: Number(i.fisica) })) } });
+    cerrarPanel();
+    toast(r.creados.length ? `${r.creados.length} ajuste${r.creados.length > 1 ? 's' : ''} guardado${r.creados.length > 1 ? 's' : ''}${r.sin_diferencia ? ` · ${r.sin_diferencia} sin diferencia` : ''}` : 'Todo coincide con Wansoft, no se generaron ajustes');
+    if (S.vista === 'ajustes') vAjustes(); else if (S.vista === 'inventario') cargarConsolidado();
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+//  Vista: Órdenes de compra
+// ════════════════════════════════════════════════════════════════
+const fOC = { estado: 'abiertas', sucursal_id: '', q: '' };
+async function vOrdenes() {
+  $('#vista').innerHTML = cabeza('Órdenes de compra', 'Cada orden tiene folio, historial y el avance de lo recibido. La recepción se confirma contra las entradas de compra registradas en Wansoft.',
+    `<button class="btn primario" id="b-nueva-oc">Nueva orden de compra</button>`) +
+    `<div class="filtros">
+      <div class="chips" role="group" aria-label="Estado">${[['abiertas', 'Abiertas'], ['borrador', 'Borradores'], ['enviada', 'Enviadas'], ['recibida_parcial', 'Parciales'], ['recibida', 'Recibidas'], ['cancelada', 'Canceladas'], ['', 'Todas']].map(([k, t]) =>
+        `<button class="chip" data-e="${k}" aria-pressed="${fOC.estado === k}">${t}</button>`).join('')}</div>
+      <select id="oc-suc" aria-label="Sucursal">${opcionesSucursal(fOC.sucursal_id, 'Todas las sucursales')}</select>
+      <input type="search" id="oc-q" placeholder="Folio, proveedor o sucursal" value="${esc(fOC.q)}" aria-label="Buscar orden">
+    </div><div id="oc-cont"><div class="vacio"><span class="carga"></span></div></div>`;
+  $('#b-nueva-oc').onclick = () => editorOrden();
+  $$('[data-e]').forEach(b => b.onclick = () => { fOC.estado = b.dataset.e; vOrdenes(); });
+  $('#oc-suc').onchange = e => { fOC.sucursal_id = e.target.value; vOrdenes(); };
+  let t; $('#oc-q').oninput = e => { clearTimeout(t); t = setTimeout(() => { fOC.q = e.target.value; cargarOrdenes(); }, 250); };
+  cargarOrdenes();
+}
+async function cargarOrdenes() {
+  try {
+    const p = new URLSearchParams();
+    if (fOC.estado && fOC.estado !== 'abiertas') p.set('estado', fOC.estado);
+    if (fOC.sucursal_id) p.set('sucursal_id', fOC.sucursal_id);
+    if (fOC.q) p.set('q', fOC.q);
+    let rows = await api('/ordenes?' + p);
+    if (fOC.estado === 'abiertas') rows = rows.filter(r => ['borrador', 'enviada', 'recibida_parcial'].includes(r.estado));
+    if (!rows.length) {
+      $('#oc-cont').innerHTML = `<div class="caja vacio"><b>No hay órdenes ${fOC.estado === 'abiertas' ? 'abiertas' : 'con ese filtro'}</b>Crea una orden desde aquí o desde una celda del inventario consolidado.</div>`;
+      return;
+    }
+    const hoy = new Date().toISOString().slice(0, 10);
+    $('#oc-cont').innerHTML = `<div class="caja tabla-scroll"><table><thead><tr><th>Folio</th><th>Sucursal</th><th>Proveedor</th><th>Estado</th><th>Recibido</th><th class="num">Total</th><th>Entrega</th><th>Creada</th></tr></thead>
+      <tbody>${rows.map(r => {
+        const pct = r.piezas > 0 ? Math.min(100, Math.round(100 * r.recibidas / r.piezas)) : 0;
+        const tarde = r.fecha_entrega && r.fecha_entrega.slice(0, 10) < hoy && ['enviada', 'recibida_parcial'].includes(r.estado);
+        return `<tr class="clic" data-oc="${r.id}" tabindex="0">
+          <td><b>${esc(r.folio)}</b></td><td>${esc(r.sucursal)}</td><td>${esc(r.proveedor || '—')}</td>
+          <td><span class="est ${r.estado}">${ESTADO_OC[r.estado]}</span></td>
+          <td><div style="display:flex;gap:8px;align-items:center"><div class="barra" aria-hidden="true"><i style="width:${pct}%"></i></div><span class="muted">${pct}%</span></div></td>
+          <td class="num">${dinero(r.total)}</td>
+          <td>${r.fecha_entrega ? `<span class="${tarde ? 'dif-neg' : ''}">${fecha(r.fecha_entrega)}${tarde ? ' · atrasada' : ''}</span>` : '—'}</td>
+          <td>${fecha(r.creado_en)}<br><span class="muted">${esc(r.creado_por_nombre || '')}</span></td></tr>`;
+      }).join('')}</tbody></table></div>`;
+    $$('[data-oc]').forEach(tr => {
+      tr.onclick = () => detalleOrden(tr.dataset.oc);
+      tr.onkeydown = e => { if (e.key === 'Enter') detalleOrden(tr.dataset.oc); };
+    });
+  } catch (e) { $('#oc-cont').innerHTML = `<div class="aviso error">${esc(e.message)}</div>`; }
+}
+
+function editorOrden(oc = null, pre = {}) {
+  const base = oc || { sucursal_id: pre.sucursal_id || '', proveedor_id: '', fecha_entrega: '', notas: '', lineas: pre.lineas || [] };
+  const misSucs = S.user.rol === 'sucursal' ? S.user.sucursales : null;
+  if (!base.sucursal_id && misSucs?.length === 1) base.sucursal_id = misSucs[0];
+  const lineas = base.lineas.map(l => ({ codigo: l.codigo, nombre: l.nombre, unidad: l.unidad, cantidad: l.cantidad ?? '', costo_unitario: l.costo_unitario ?? l.costo ?? 0, existencia_sucursal: l.existencia_sucursal ?? l.existencia_actual }));
+  const panel = abrirPanel(`
+    <div class="panel-cab"><div><h2>${oc ? 'Editar ' + esc(oc.folio) : 'Nueva orden de compra'}</h2><div class="muted">Se guarda como borrador hasta que la envíes.</div></div>${botonCerrar}</div>
+    <div class="panel-cuerpo">
+      <div class="rejilla">
+        <label class="campo">Sucursal que recibe<select id="oc-s">${opcionesSucursal(base.sucursal_id)}</select></label>
+        <label class="campo">Proveedor<select id="oc-p">${opcionesProveedor(base.proveedor_id)}</select></label>
+        <label class="campo">Fecha de entrega esperada<input type="date" id="oc-f" value="${esc((base.fecha_entrega || '').slice(0, 10))}"></label>
+      </div>
+      <label class="campo">Notas para el proveedor o el almacén<textarea id="oc-n" rows="2">${esc(base.notas || '')}</textarea></label>
+      <div><label class="campo" style="margin-bottom:4px">Agregar producto</label><div id="oc-bus"></div></div>
+      <div class="caja tabla-scroll" id="oc-items"></div>
+    </div>
+    <div class="panel-pie">
+      <button class="btn primario" id="oc-enviar">Guardar y enviar</button>
+      <button class="btn" id="oc-borrador">Guardar borrador</button>
+      <button class="btn" onclick="cerrarPanel()">Cancelar</button>
+      <span style="margin-left:auto;align-self:center">Total: <b id="oc-total">$0.00</b></span>
+    </div>`);
+
+  const total = () => lineas.reduce((a, l) => a + (Number(l.cantidad) || 0) * (Number(l.costo_unitario) || 0), 0);
+  const pintar = () => {
+    $('#oc-total', panel).textContent = dinero(total());
+    if (!lineas.length) { $('#oc-items', panel).innerHTML = `<div class="vacio">Busca los productos que vas a pedir.</div>`; return; }
+    $('#oc-items', panel).innerHTML = `<table><thead><tr><th>Producto</th><th class="num">Existencia en sucursal</th><th class="num">Cantidad</th><th class="num">Costo unitario</th><th class="num">Importe</th><th></th></tr></thead><tbody>
+      ${lineas.map((l, i) => `<tr><td><b>${esc(l.nombre || l.codigo)}</b><br><span class="muted">${esc(l.codigo)} · ${esc(l.unidad || '')}</span></td>
+        <td class="num">${fmt(l.existencia_sucursal)}</td>
+        <td class="num"><input type="number" min="0" step="any" data-i="${i}" data-k="cantidad" value="${esc(l.cantidad)}" aria-label="Cantidad de ${esc(l.nombre)}"></td>
+        <td class="num"><input type="number" min="0" step="any" data-i="${i}" data-k="costo_unitario" value="${esc(l.costo_unitario)}" aria-label="Costo de ${esc(l.nombre)}"></td>
+        <td class="num" data-imp="${i}">${dinero((Number(l.cantidad) || 0) * (Number(l.costo_unitario) || 0))}</td>
+        <td><button class="btn mini texto" data-quitar="${i}">Quitar</button></td></tr>`).join('')}</tbody></table>`;
+    $$('input[data-i]', panel).forEach(inp => inp.addEventListener('input', () => {
+      const l = lineas[inp.dataset.i]; l[inp.dataset.k] = inp.value;
+      $(`[data-imp="${inp.dataset.i}"]`, panel).textContent = dinero((Number(l.cantidad) || 0) * (Number(l.costo_unitario) || 0));
+      $('#oc-total', panel).textContent = dinero(total());
+    }));
+    $$('[data-quitar]', panel).forEach(b => b.onclick = () => { lineas.splice(b.dataset.quitar, 1); pintar(); });
+  };
+  const sel = $('#oc-s', panel);
+  montarBuscador($('#oc-bus', panel), {
+    sucursal: () => sel.value,
+    alElegir: p => {
+      if (lineas.some(x => x.codigo === p.codigo)) return toast('Ese producto ya está en la orden');
+      lineas.push({ codigo: p.codigo, nombre: p.nombre, unidad: p.unidad, cantidad: '', costo_unitario: p.costo ? Number(p.costo) : 0, existencia_sucursal: p.existencia_sucursal });
+      pintar();
+      $(`input[data-i="${lineas.length - 1}"][data-k=cantidad]`, panel)?.focus();
+    },
+  });
+  pintar();
+  if (lineas.length) setTimeout(() => $('input[data-k=cantidad]', panel)?.focus(), 50);
+
+  const guardar = (enviar) => async () => {
+    if (!sel.value) throw new Error('Elige la sucursal que recibe');
+    const ls = lineas.filter(l => Number(l.cantidad) > 0);
+    if (!ls.length) throw new Error('Captura la cantidad de al menos un producto');
+    const body = { sucursal_id: +sel.value, proveedor_id: $('#oc-p', panel).value || null, fecha_entrega: $('#oc-f', panel).value || null,
+      notas: $('#oc-n', panel).value, lineas: ls.map(l => ({ codigo: l.codigo, nombre: l.nombre, unidad: l.unidad, cantidad: Number(l.cantidad), costo_unitario: Number(l.costo_unitario) || 0 })) };
+    let id;
+    if (oc) {
+      await api(`/ordenes/${oc.id}`, { method: 'PUT', body });
+      if (enviar) await api(`/ordenes/${oc.id}/enviar`, { method: 'POST' });
+      id = oc.id;
+      toast(enviar ? `${oc.folio} enviada` : 'Cambios guardados');
+    } else {
+      const r = await api('/ordenes', { method: 'POST', body: { ...body, enviar } });
+      id = r.id;
+      toast(enviar ? `${r.folio} creada y enviada` : `${r.folio} guardada como borrador`);
+    }
+    if (S.vista === 'ordenes') cargarOrdenes(); else if (S.vista === 'inventario') cargarConsolidado();
+    detalleOrden(id);
+  };
+  $('#oc-enviar', panel).onclick = e => accion(e.currentTarget, guardar(true));
+  $('#oc-borrador', panel).onclick = e => accion(e.currentTarget, guardar(false));
+}
+
+async function detalleOrden(id) {
+  let oc;
+  try { oc = await api('/ordenes/' + id); } catch (e) { return toast(e.message, 'error'); }
+  const abierta = ['enviada', 'recibida_parcial'].includes(oc.estado);
+  const pasos = [['borrador', 'Borrador'], ['enviada', 'Enviada'], ['recibida_parcial', 'Recibiendo'], ['recibida', 'Recibida']];
+  const idx = pasos.findIndex(p => p[0] === oc.estado);
+  const piezas = oc.lineas.reduce((a, l) => a + Number(l.cantidad), 0);
+  const rec = oc.lineas.reduce((a, l) => a + Math.min(Number(l.cantidad_recibida), Number(l.cantidad)), 0);
+
+  const panel = abrirPanel(`
+    <div class="panel-cab"><div>
+      <h2>${esc(oc.folio)} <span class="est ${oc.estado}" style="vertical-align:3px">${ESTADO_OC[oc.estado]}</span></h2>
+      <div class="muted">${esc(oc.sucursal)} · ${esc(oc.proveedor || 'Sin proveedor')} · ${dinero(oc.total)}</div></div>${botonCerrar}</div>
+    <div class="panel-cuerpo">
+      ${oc.estado === 'cancelada'
+        ? `<ol class="pasos"><li class="cancelada">Cancelada ${fechaHora(oc.cerrada_en)}</li></ol>`
+        : `<ol class="pasos">${pasos.map((p, i) => `<li class="${i < idx ? 'hecho' : i === idx ? 'actual' : ''}">${p[1]}</li>`).join('')}</ol>`}
+      <div class="rejilla">
+        <div><span class="muted">Creada</span><br>${fechaHora(oc.creado_en)} por ${esc(oc.creado_por_nombre || '—')}</div>
+        <div><span class="muted">Enviada</span><br>${fechaHora(oc.enviada_en)}</div>
+        <div><span class="muted">Entrega esperada</span><br>${fecha(oc.fecha_entrega)}</div>
+        <div><span class="muted">Recibido</span><br>${fmt(rec)} de ${fmt(piezas)} (${piezas ? Math.round(100 * rec / piezas) : 0}%)</div>
+      </div>
+      ${oc.notas ? `<div class="aviso">${esc(oc.notas)}</div>` : ''}
+      <div id="wan-sug"></div>
+      <div class="caja tabla-scroll"><table><thead><tr><th>Producto</th><th class="num">Pedido</th><th class="num">Recibido</th><th class="num">Falta</th><th class="num">Costo</th><th class="num">Importe</th>${abierta ? '<th class="num">Recibir ahora</th>' : ''}</tr></thead>
+        <tbody>${oc.lineas.map(l => {
+          const falta = Math.max(0, l.cantidad - l.cantidad_recibida);
+          return `<tr><td><b>${esc(l.nombre || l.codigo)}</b><br><span class="muted">${esc(l.codigo)} · ${esc(l.unidad || '')}</span></td>
+          <td class="num">${fmt(l.cantidad)}</td><td class="num">${fmt(l.cantidad_recibida)}</td>
+          <td class="num ${falta > 0 ? 'dif-neg' : ''}">${falta > 0 ? fmt(falta) : 'Completo'}</td>
+          <td class="num">${dinero(l.costo_unitario)}</td><td class="num">${dinero(l.cantidad * l.costo_unitario)}</td>
+          ${abierta ? `<td class="num"><input type="number" min="0" step="any" data-rec="${l.id}" placeholder="${falta > 0 ? fmt(falta) : '0'}" aria-label="Recibir ${esc(l.nombre)}"></td>` : ''}</tr>`;
+        }).join('')}</tbody></table></div>
+      <div><h3 style="margin-bottom:10px">Historial</h3><ul class="historial">${oc.eventos.map(e => `<li>${esc(textoEvento(e))}<small>${fechaHora(e.creado_en)}${e.usuario ? ' · ' + esc(e.usuario) : ''}</small></li>`).join('')}</ul></div>
+    </div>
+    <div class="panel-pie">
+      ${oc.estado === 'borrador' ? `<button class="btn primario" id="d-enviar">Enviar orden</button><button class="btn" id="d-editar">Editar</button>` : ''}
+      ${abierta ? `<button class="btn primario" id="d-buscar">Buscar recepción en Wansoft</button><button class="btn" id="d-recibir">Registrar recepción manual</button>` : ''}
+      ${oc.estado === 'recibida_parcial' && esCompras() ? `<button class="btn" id="d-cerrar">Cerrar con faltantes</button>` : ''}
+      <button class="btn" id="d-imprimir">Imprimir</button>
+      ${!['recibida', 'cancelada'].includes(oc.estado) && (oc.estado === 'borrador' || esCompras()) ? `<button class="btn peligro" id="d-cancelar" style="margin-left:auto">Cancelar orden</button>` : ''}
+    </div>`);
+
+  const recargar = () => { detalleOrden(id); if (S.vista === 'ordenes') cargarOrdenes(); };
+  $('#d-enviar', panel)?.addEventListener('click', e => accion(e.currentTarget, async () => { await api(`/ordenes/${id}/enviar`, { method: 'POST' }); toast(`${oc.folio} enviada`); recargar(); }));
+  $('#d-editar', panel)?.addEventListener('click', () => editorOrden(oc));
+  $('#d-cancelar', panel)?.addEventListener('click', e => {
+    const motivo = prompt(`¿Por qué se cancela ${oc.folio}?`);
+    if (motivo === null) return;
+    accion(e.currentTarget, async () => { await api(`/ordenes/${id}/cancelar`, { method: 'POST', body: { motivo } }); toast(`${oc.folio} cancelada`); recargar(); });
+  });
+  $('#d-cerrar', panel)?.addEventListener('click', e => {
+    const motivo = prompt('¿Por qué se cierra con faltantes?', 'El proveedor no surtirá el resto');
+    if (motivo === null) return;
+    accion(e.currentTarget, async () => { await api(`/ordenes/${id}/cerrar`, { method: 'POST', body: { motivo } }); toast(`${oc.folio} cerrada`); recargar(); });
+  });
+  $('#d-recibir', panel)?.addEventListener('click', e => {
+    const items = $$('[data-rec]', panel).filter(i => Number(i.value) > 0).map(i => ({ linea_id: +i.dataset.rec, cantidad: Number(i.value) }));
+    if (!items.length) { $('[data-rec]', panel)?.focus(); return toast('Captura en "Recibir ahora" lo que llegó', 'error'); }
+    accion(e.currentTarget, async () => {
+      const r = await api(`/ordenes/${id}/recepcion`, { method: 'POST', body: { items } });
+      toast(r.estado === 'recibida' ? `${oc.folio} recibida completa` : 'Recepción registrada'); recargar();
+    });
+  });
+  $('#d-buscar', panel)?.addEventListener('click', e => accion(e.currentTarget, async () => {
+    const r = await api(`/ordenes/${id}/wansoft`);
+    const cont = $('#wan-sug', panel);
+    if (!r.sugerencias.length) {
+      cont.innerHTML = `<div class="aviso ${r.errores?.length ? 'error' : 'alerta'}">${r.errores?.length ? 'No se pudo revisar Wansoft: ' + esc(r.errores[0]) :
+        `No hay entradas de compra nuevas en Wansoft para estos productos en los últimos ${r.dias} día${r.dias === 1 ? '' : 's'}.`}</div>`;
+      return;
+    }
+    cont.innerHTML = `<div class="caja"><div style="padding:12px 14px"><h3>Entradas encontradas en Wansoft</h3><span class="muted">Revisa que correspondan a esta orden antes de aplicarlas.</span></div>
+      <table><thead><tr><th></th><th>Producto</th><th class="num">Cantidad</th><th>Fecha</th><th>Proveedor en Wansoft</th></tr></thead>
+      <tbody>${r.sugerencias.map((s, i) => `<tr><td><input type="checkbox" checked data-sug="${i}" aria-label="Aplicar ${esc(s.nombre)}"></td>
+        <td>${esc(s.nombre || s.codigo)}</td><td class="num">${fmt(s.cantidad)}</td><td>${esc(String(s.fecha).slice(0, 10))}</td><td>${esc(s.proveedor || '—')}</td></tr>`).join('')}</tbody></table>
+      <div style="padding:12px 14px"><button class="btn primario" id="sug-aplicar">Aplicar recepción</button></div></div>`;
+    $('#sug-aplicar', cont).onclick = ev => accion(ev.currentTarget, async () => {
+      const items = $$('[data-sug]', cont).filter(c => c.checked).map(c => r.sugerencias[c.dataset.sug]);
+      if (!items.length) throw new Error('Marca al menos una entrada');
+      const out = await api(`/ordenes/${id}/wansoft/aplicar`, { method: 'POST', body: { items } });
+      toast(out.estado === 'recibida' ? `${oc.folio} recibida completa` : `${out.aplicadas} recepción${out.aplicadas === 1 ? '' : 'es'} aplicada${out.aplicadas === 1 ? '' : 's'}`);
+      recargar();
+    });
+  }));
+  $('#d-imprimir', panel).addEventListener('click', () => imprimirOrden(oc));
+}
+
+function textoEvento(e) {
+  const t = { creada: 'Orden creada', editada: 'Orden editada', enviada: 'Orden enviada', cancelada: 'Orden cancelada', cerrada: 'Cerrada con faltantes', recepcion: 'Recibido', estado: '' }[e.tipo] ?? e.tipo;
+  return [t, e.detalle].filter(Boolean).join(': ');
+}
+
+function imprimirOrden(oc) {
+  const prov = S.proveedores.find(p => p.id === oc.proveedor_id);
+  $('#impresion').innerHTML = `<h2>Orden de compra ${esc(oc.folio)}</h2>
+    <p><b>Mozzarella Express</b> · Sucursal: ${esc(oc.sucursal)}<br>Proveedor: ${esc(oc.proveedor || '—')}${prov?.telefono ? ' · Tel. ' + esc(prov.telefono) : ''}<br>
+    Fecha: ${fecha(oc.enviada_en || oc.creado_en)} · Entrega esperada: ${fecha(oc.fecha_entrega)}</p>
+    ${oc.notas ? `<p>Notas: ${esc(oc.notas)}</p>` : ''}
+    <table style="width:100%;border-collapse:collapse"><thead><tr><th>Código</th><th>Producto</th><th>Unidad</th><th>Cantidad</th><th>Costo</th><th>Importe</th></tr></thead>
+    <tbody>${oc.lineas.map(l => `<tr><td>${esc(l.codigo)}</td><td>${esc(l.nombre || '')}</td><td>${esc(l.unidad || '')}</td><td style="text-align:right">${fmt(l.cantidad)}</td><td style="text-align:right">${dinero(l.costo_unitario)}</td><td style="text-align:right">${dinero(l.cantidad * l.costo_unitario)}</td></tr>`).join('')}
+    <tr><td colspan="5" style="text-align:right"><b>Total</b></td><td style="text-align:right"><b>${dinero(oc.total)}</b></td></tr></tbody></table>
+    <p style="margin-top:40px">Recibió: ______________________ &nbsp;&nbsp; Fecha: ____________</p>`;
+  window.print();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  Vista: Proveedores
+// ════════════════════════════════════════════════════════════════
+async function vProveedores() {
+  S.proveedores = await api('/proveedores').catch(() => S.proveedores);
+  $('#vista').innerHTML = cabeza('Proveedores', 'A quién se le compra. Se eligen al crear una orden.', esCompras() ? `<button class="btn primario" id="b-prov">Agregar proveedor</button>` : '') +
+    (S.proveedores.length ? `<div class="caja tabla-scroll"><table><thead><tr><th>Proveedor</th><th>Contacto</th><th>Teléfono</th><th>Correo</th><th>Estado</th>${esCompras() ? '<th></th>' : ''}</tr></thead>
+    <tbody>${S.proveedores.map(p => `<tr><td><b>${esc(p.nombre)}</b></td><td>${esc(p.contacto || '—')}</td><td>${esc(p.telefono || '—')}</td><td>${esc(p.email || '—')}</td>
+      <td><span class="est ${p.activo ? 'ok' : 'cancelado'}">${p.activo ? 'Activo' : 'Inactivo'}</span></td>
+      ${esCompras() ? `<td><button class="btn mini" data-pv="${p.id}">Editar</button></td>` : ''}</tr>`).join('')}</tbody></table></div>`
+      : `<div class="caja vacio"><b>Sin proveedores</b>Agrega a tus proveedores para asignarlos en las órdenes.</div>`);
+  $('#b-prov')?.addEventListener('click', () => formProveedor());
+  $$('[data-pv]').forEach(b => b.onclick = () => formProveedor(S.proveedores.find(p => p.id === +b.dataset.pv)));
+}
+function formProveedor(p = {}) {
+  const panel = abrirPanel(`<div class="panel-cab"><h2>${p.id ? 'Editar proveedor' : 'Agregar proveedor'}</h2>${botonCerrar}</div>
+    <div class="panel-cuerpo">
+      <label class="campo">Nombre<input type="text" id="pv-n" value="${esc(p.nombre || '')}"></label>
+      <label class="campo">Contacto<input type="text" id="pv-c" value="${esc(p.contacto || '')}"></label>
+      <label class="campo">Teléfono<input type="text" id="pv-t" value="${esc(p.telefono || '')}"></label>
+      <label class="campo">Correo<input type="text" id="pv-e" value="${esc(p.email || '')}"></label>
+      ${p.id ? `<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="pv-a" ${p.activo ? 'checked' : ''}> Activo</label>` : ''}
+    </div>
+    <div class="panel-pie"><button class="btn primario" id="pv-g">Guardar proveedor</button><button class="btn" onclick="cerrarPanel()">Cancelar</button></div>`, { angosto: true });
+  $('#pv-g', panel).onclick = e => accion(e.currentTarget, async () => {
+    const body = { nombre: $('#pv-n', panel).value, contacto: $('#pv-c', panel).value, telefono: $('#pv-t', panel).value, email: $('#pv-e', panel).value };
+    if (p.id) await api(`/proveedores/${p.id}`, { method: 'PUT', body: { ...body, activo: $('#pv-a', panel).checked } });
+    else await api('/proveedores', { method: 'POST', body });
+    cerrarPanel(); toast('Proveedor guardado'); vProveedores();
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+//  Vista: Sucursales y claves de Wansoft
+// ════════════════════════════════════════════════════════════════
+async function vSucursales() {
+  await cargarCatalogos();
+  const conectadas = S.sucursales.filter(s => s.wansoft_id && s.tiene_password).length;
+  $('#vista').innerHTML = cabeza('Sucursales y Wansoft',
+    `${conectadas} de ${S.sucursales.length} sucursales conectadas. Cada sucursal usa su propio ID y contraseña del WebService de Wansoft; la contraseña se guarda cifrada y nunca se vuelve a mostrar.`,
+    `<button class="btn" id="b-suc-nueva">Agregar sucursal</button><button class="btn primario" id="b-suc-sync">Actualizar todas</button>`) +
+    `<div class="caja tabla-scroll"><table><thead><tr><th>Sucursal</th><th>ID Wansoft</th><th>Contraseña</th><th>Última actualización</th><th class="num">Productos</th><th></th></tr></thead>
+    <tbody>${S.sucursales.map(s => `<tr>
+      <td><b>${esc(s.nombre)}</b>${s.activa ? '' : ' <span class="est cancelado">Inactiva</span>'}</td>
+      <td>${s.wansoft_id ? esc(s.wansoft_id) : '<span class="muted">Falta</span>'}</td>
+      <td>${s.tiene_password ? '<span class="est ok">Guardada</span>' : '<span class="muted">Falta</span>'}</td>
+      <td>${s.ultimo_error ? `<span class="est error" title="${esc(s.ultimo_error)}">Error</span><br><span class="muted" style="font-size:13px">${esc(s.ultimo_error.slice(0, 90))}</span>` : esc(hace(s.ultimo_sync))}</td>
+      <td class="num">${fmt(s.productos)}</td>
+      <td style="white-space:nowrap"><button class="btn mini" data-ed="${s.id}">Editar</button>
+        ${s.wansoft_id && s.tiene_password ? `<button class="btn mini" data-sy="${s.id}">Actualizar</button>` : ''}</td></tr>`).join('')}</tbody></table></div>`;
+  $('#b-suc-sync').onclick = e => accion(e.currentTarget, async () => {
+    const r = await api('/sucursales/sync', { method: 'POST' });
+    const mal = r.resultados.filter(x => !x.ok).length;
+    toast(r.resultados.length ? `Listo: ${r.resultados.length - mal} correctas${mal ? `, ${mal} con error` : ''}` : 'No hay sucursales con claves todavía', mal ? 'error' : null);
+    vSucursales();
+  });
+  $('#b-suc-nueva').onclick = () => formSucursal();
+  $$('[data-ed]').forEach(b => b.onclick = () => formSucursal(S.sucursales.find(s => s.id === +b.dataset.ed)));
+  $$('[data-sy]').forEach(b => b.onclick = () => accion(b, async () => {
+    const r = await api(`/sucursales/${b.dataset.sy}/sync`, { method: 'POST' });
+    toast(r.ok ? `${r.sucursal}: ${r.productos} productos` : `${r.sucursal}: ${r.error}`, r.ok ? null : 'error');
+    vSucursales();
+  }));
+}
+function formSucursal(s = {}) {
+  const panel = abrirPanel(`<div class="panel-cab"><h2>${s.id ? esc(s.nombre) : 'Agregar sucursal'}</h2>${botonCerrar}</div>
+    <div class="panel-cuerpo">
+      <label class="campo">Nombre<input type="text" id="su-n" value="${esc(s.nombre || '')}"></label>
+      ${s.id ? `
+      <label class="campo">ID de sucursal en Wansoft (subsidiaryId)<input type="number" id="su-i" value="${esc(s.wansoft_id || '')}"></label>
+      <label class="campo">Contraseña del WebService (pwdWebService)<input type="password" id="su-p" autocomplete="new-password" placeholder="${s.tiene_password ? 'Guardada. Escribe una nueva solo si cambió' : 'Escribe la contraseña'}"></label>
+      <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="su-a" ${s.activa ? 'checked' : ''}> Sucursal activa (aparece en inventario y órdenes)</label>
+      <div class="aviso">Wansoft entrega estas claves por sucursal. Después de guardar, usa "Probar conexión" para confirmar que funcionan.</div>` : ''}
+    </div>
+    <div class="panel-pie"><button class="btn primario" id="su-g">Guardar</button>${s.id ? `<button class="btn" id="su-t">Guardar y probar conexión</button>` : ''}<button class="btn" onclick="cerrarPanel()">Cancelar</button></div>`, { angosto: true });
+  const guardar = async () => {
+    const nombre = $('#su-n', panel).value.trim();
+    if (!nombre) throw new Error('Escribe el nombre');
+    if (!s.id) { await api('/sucursales', { method: 'POST', body: { nombre } }); return; }
+    const body = { nombre, wansoft_id: $('#su-i', panel).value, activa: $('#su-a', panel).checked };
+    const pwd = $('#su-p', panel).value; if (pwd) body.password = pwd;
+    await api(`/sucursales/${s.id}`, { method: 'PUT', body });
+  };
+  $('#su-g', panel).onclick = e => accion(e.currentTarget, async () => { await guardar(); cerrarPanel(); toast('Sucursal guardada'); vSucursales(); });
+  $('#su-t', panel)?.addEventListener('click', e => accion(e.currentTarget, async () => {
+    await guardar();
+    const r = await api(`/sucursales/${s.id}/sync`, { method: 'POST' });
+    if (r.ok) { cerrarPanel(); toast(`Conexión correcta: ${r.productos} productos`); vSucursales(); }
+    else throw new Error(r.error);
+  }));
+}
+
+// ════════════════════════════════════════════════════════════════
+//  Vista: Usuarios
+// ════════════════════════════════════════════════════════════════
+async function vUsuarios() {
+  const us = await api('/usuarios');
+  const nombreSuc = id => S.sucursales.find(s => s.id === id)?.nombre || id;
+  $('#vista').innerHTML = cabeza('Usuarios', 'Administrador ve y configura todo. Compras ve todas las sucursales y maneja órdenes y ajustes. Sucursal solo ve las sucursales que le asignes.',
+    `<button class="btn primario" id="b-us">Agregar usuario</button>`) +
+    `<div class="caja tabla-scroll"><table><thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Sucursales</th><th>Estado</th><th></th></tr></thead>
+    <tbody>${us.map(u => `<tr><td><b>${esc(u.nombre)}</b></td><td>${esc(u.usuario)}</td><td>${ROLES[u.rol]}</td>
+      <td>${u.rol === 'sucursal' ? (u.sucursales.length ? esc(u.sucursales.map(nombreSuc).join(', ')) : '<span class="dif-neg">Sin asignar</span>') : '<span class="muted">Todas</span>'}</td>
+      <td><span class="est ${u.activo ? 'ok' : 'cancelado'}">${u.activo ? 'Activo' : 'Inactivo'}</span></td>
+      <td><button class="btn mini" data-us="${u.id}">Editar</button></td></tr>`).join('')}</tbody></table></div>`;
+  $('#b-us').onclick = () => formUsuario();
+  $$('[data-us]').forEach(b => b.onclick = () => formUsuario(us.find(u => u.id === +b.dataset.us)));
+}
+function formUsuario(u = { rol: 'sucursal', sucursales: [], activo: true }) {
+  const panel = abrirPanel(`<div class="panel-cab"><h2>${u.id ? esc(u.nombre) : 'Agregar usuario'}</h2>${botonCerrar}</div>
+    <div class="panel-cuerpo">
+      <label class="campo">Nombre<input type="text" id="us-n" value="${esc(u.nombre || '')}"></label>
+      ${u.id ? '' : `<label class="campo">Usuario para entrar<input type="text" id="us-u" autocomplete="off"></label>`}
+      <label class="campo">${u.id ? 'Nueva contraseña (déjala vacía para no cambiarla)' : 'Contraseña'}<input type="password" id="us-p" autocomplete="new-password" placeholder="Mínimo 8 caracteres"></label>
+      <label class="campo">Rol<select id="us-r">${Object.entries(ROLES).map(([k, t]) => `<option value="${k}" ${u.rol === k ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+      <fieldset id="us-sucs" style="border:1px solid var(--linea);border-radius:var(--r-s);padding:10px 12px;max-height:260px;overflow:auto">
+        <legend style="font-size:13px;color:var(--tinta-2);font-weight:500">Sucursales que puede ver</legend>
+        ${S.sucursales.map(s => `<label style="display:flex;gap:8px;padding:2px 0"><input type="checkbox" value="${s.id}" ${u.sucursales.includes(s.id) ? 'checked' : ''}>${esc(s.nombre)}</label>`).join('')}
+      </fieldset>
+      ${u.id ? `<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="us-a" ${u.activo ? 'checked' : ''}> Puede entrar</label>` : ''}
+    </div>
+    <div class="panel-pie"><button class="btn primario" id="us-g">Guardar usuario</button><button class="btn" onclick="cerrarPanel()">Cancelar</button></div>`, { angosto: true });
+  const rol = $('#us-r', panel), fs = $('#us-sucs', panel);
+  const toggle = () => fs.classList.toggle('oculto', rol.value !== 'sucursal');
+  rol.onchange = toggle; toggle();
+  $('#us-g', panel).onclick = e => accion(e.currentTarget, async () => {
+    const body = { nombre: $('#us-n', panel).value, rol: rol.value, sucursales: $$('input:checked', fs).map(i => +i.value) };
+    const p = $('#us-p', panel).value; if (p) body.password = p;
+    if (rol.value === 'sucursal' && !body.sucursales.length) throw new Error('Asigna al menos una sucursal');
+    if (u.id) await api(`/usuarios/${u.id}`, { method: 'PUT', body: { ...body, activo: $('#us-a', panel).checked } });
+    else await api('/usuarios', { method: 'POST', body: { ...body, usuario: $('#us-u', panel).value } });
+    cerrarPanel(); toast('Usuario guardado'); vUsuarios();
+  });
+}
+function cambiarPassword() {
+  const panel = abrirPanel(`<div class="panel-cab"><h2>Cambiar contraseña</h2>${botonCerrar}</div>
+    <div class="panel-cuerpo">
+      <label class="campo">Contraseña actual<input type="password" id="cp-a" autocomplete="current-password"></label>
+      <label class="campo">Nueva contraseña<input type="password" id="cp-n" autocomplete="new-password" placeholder="Mínimo 8 caracteres"></label>
+    </div>
+    <div class="panel-pie"><button class="btn primario" id="cp-g">Cambiar contraseña</button></div>`, { angosto: true });
+  $('#cp-g', panel).onclick = e => accion(e.currentTarget, async () => {
+    await api('/auth/cambiar-password', { method: 'POST', body: { actual: $('#cp-a', panel).value, nueva: $('#cp-n', panel).value } });
+    cerrarPanel(); toast('Contraseña cambiada');
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+//  Vista: Diagnóstico de Wansoft
+// ════════════════════════════════════════════════════════════════
+const CAMPOS = {
+  inventario: [['codigo', 'Código del producto'], ['nombre', 'Nombre'], ['existencia', 'Existencia'], ['unidad', 'Unidad'], ['departamento', 'Departamento'], ['costo', 'Costo']],
+  entradas: [['codigo', 'Código del producto'], ['nombre', 'Nombre'], ['existencia', 'Cantidad que entró'], ['tipo', 'Tipo de entrada'], ['referencia', 'Folio o ID de la entrada'], ['fecha', 'Fecha'], ['proveedor', 'Proveedor']],
+};
+function vDiagnostico() {
+  const conClaves = S.sucursales.filter(s => s.wansoft_id && s.tiene_password);
+  $('#vista').innerHTML = cabeza('Diagnóstico de Wansoft', 'Consulta Wansoft en vivo para ver qué columnas devuelve y confirmar cuál corresponde a cada dato. Úsalo si el inventario sale vacío o con cantidades raras.') +
+    (conClaves.length ? `<div class="filtros">
+      <select id="dg-s" aria-label="Sucursal">${conClaves.map(s => `<option value="${s.id}">${esc(s.nombre)}</option>`).join('')}</select>
+      <select id="dg-m" aria-label="Consulta">
+        <option value="GetInventory_Xml">Inventario actual (GetInventory)</option>
+        <option value="GetInputInventory_Xml">Entradas de inventario (GetInputInventory)</option>
+        <option value="GetProducts_Xml">Catálogo de productos (GetProducts)</option>
+        <option value="GetWarehouses_Xml">Almacenes (GetWarehouses)</option>
+        <option value="GetPendingPurchaseOrders_Xml">Órdenes pendientes en Wansoft</option>
+        <option value="GetOutgoingInventory_Xml">Salidas de inventario</option>
+        <option value="GetStockInventory_Xml">Inventario a una fecha</option>
+      </select>
+      <input type="date" id="dg-f" value="${new Date(Date.now() - 864e5).toISOString().slice(0, 10)}" aria-label="Fecha de operación">
+      <button class="btn primario" id="dg-go">Consultar</button></div><div id="dg-res"></div>`
+      : `<div class="caja vacio"><b>Primero conecta una sucursal</b>Agrega el ID y contraseña de Wansoft en Sucursales.<br><br><button class="btn primario" onclick="ir('sucursales')">Ir a Sucursales</button></div>`);
+  $('#dg-go')?.addEventListener('click', e => accion(e.currentTarget, async () => {
+    const metodo = $('#dg-m').value;
+    const r = await api(`/sucursales/${$('#dg-s').value}/diagnostico`, { method: 'POST', body: { metodo, fecha: $('#dg-f').value } });
+    const clave = metodo === 'GetInputInventory_Xml' ? 'entradas' : metodo === 'GetInventory_Xml' ? 'inventario' : null;
+    $('#dg-res').innerHTML = `<div class="aviso" style="margin-bottom:14px">Wansoft respondió en ${(r.ms / 1000).toFixed(1)} s con ${fmt(r.total)} registros y ${r.columnas.length} columnas.</div>
+      ${clave && r.columnas.length ? `<div class="caja" style="padding:16px;margin-bottom:16px"><h3>¿Qué columna es cada dato?</h3>
+        <p class="muted" style="margin:4px 0 12px">Se detectó automáticamente. Corrígelo si algo no corresponde y guarda.</p>
+        <div class="rejilla">${CAMPOS[clave].map(([k, t]) => `<label class="campo">${t}<select data-map="${k}"><option value="">(no aplica)</option>
+          ${r.columnas.map(c => `<option ${r.mapeo[k] === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></label>`).join('')}</div>
+        <button class="btn primario" id="dg-guardar" style="margin-top:14px">Guardar columnas</button></div>` : ''}
+      ${r.muestra.length ? `<h3 style="margin-bottom:8px">Primeros registros</h3><div class="caja tabla-scroll"><table><thead><tr>${r.columnas.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead>
+        <tbody>${r.muestra.map(f => `<tr>${r.columnas.map(c => `<td>${esc(f[c])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : ''}
+      <details style="margin-top:14px"><summary>Respuesta sin procesar</summary><pre style="white-space:pre-wrap;font-size:12px;background:var(--papel);padding:12px;border:1px solid var(--linea);border-radius:var(--r-s);max-height:300px;overflow:auto">${esc(r.crudo)}</pre></details>`;
+    $('#dg-guardar')?.addEventListener('click', ev => accion(ev.currentTarget, async () => {
+      const m = {}; $$('[data-map]').forEach(s => { if (s.value) m[s.dataset.map] = s.value; });
+      await api(`/sucursales/config/mapeo/${clave}`, { method: 'PUT', body: m });
+      toast('Columnas guardadas. Actualiza el inventario para aplicarlas.');
+    }));
+  }));
+}
+
+// ════════════════════════════════════════════════════════════════
+//  Vista: Bitácora
+// ════════════════════════════════════════════════════════════════
+const ACC = { login: 'Inició sesión', sync_todas: 'Actualizó todas las sucursales', sync_sucursal: 'Actualizó una sucursal', ajuste_crear: 'Registró ajustes', ajuste_estado: 'Cambió estado de ajuste',
+  oc_crear: 'Creó orden', oc_enviar: 'Envió orden', oc_cancelar: 'Canceló orden', oc_recepcion: 'Registró recepción', oc_recepcion_wansoft: 'Aplicó recepción de Wansoft',
+  sucursal_crear: 'Agregó sucursal', sucursal_editar: 'Editó sucursal', usuario_crear: 'Agregó usuario', usuario_editar: 'Editó usuario', proveedor_crear: 'Agregó proveedor',
+  mapeo_guardar: 'Guardó columnas de Wansoft', cambiar_password: 'Cambió su contraseña' };
+async function vBitacora() {
+  const rows = await api('/bitacora');
+  $('#vista').innerHTML = cabeza('Bitácora', 'Las últimas 300 acciones en el sistema.') +
+    `<div class="caja tabla-scroll"><table><thead><tr><th>Cuándo</th><th>Quién</th><th>Acción</th><th>Detalle</th></tr></thead>
+    <tbody>${rows.map(r => `<tr><td style="white-space:nowrap">${fechaHora(r.creado_en)}</td><td>${esc(r.usuario || 'Sistema')}</td><td>${esc(ACC[r.accion] || r.accion)}</td>
+      <td class="muted" style="font-size:13px">${esc(detalleBitacora(r.detalle))}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function detalleBitacora(d) {
+  if (!d) return '';
+  if (d.folio) return d.folio + (d.estado ? ' · ' + (ESTADO_OC[d.estado] || d.estado) : '');
+  if (d.folios) return d.folios.join(', ');
+  if (d.sucursal) return d.sucursal;
+  if (d.nombre) return d.nombre;
+  if (d.usuario) return d.usuario;
+  if ('ok' in d) return `${d.ok} correctas, ${d.error} con error`;
+  if (d.estado) return ESTADO_AJ[d.estado] || d.estado;
+  return '';
+}
+
+iniciar();
+</script>
+</body>
+</html>
