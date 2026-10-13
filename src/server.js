@@ -6,7 +6,7 @@ const { programar } = require('./sync');
 
 const app = express();
 app.set('trust proxy', 1);
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '8mb' }));  // la plantilla .xls de Wansoft viaja en base64
 
 app.use((req, res, next) => {
   res.set('X-Content-Type-Options', 'nosniff');
@@ -30,6 +30,7 @@ app.use('/api/sucursales', auth.requireAuth, noEmpleado, require('./routes/sucur
 app.use('/api/inventario', auth.requireAuth, noEmpleado, require('./routes/inventario'));
 app.use('/api/ajustes', auth.requireAuth, noEmpleado, require('./routes/ajustes'));
 app.use('/api/ordenes', auth.requireAuth, noEmpleado, require('./routes/ordenes'));
+app.use('/api/carga-wansoft', auth.requireAuth, noEmpleado, require('./routes/carga'));
 app.use('/api', auth.requireAuth, noEmpleado, require('./routes/admin'));
 app.use('/api', (req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));
 

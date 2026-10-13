@@ -10,6 +10,7 @@ Portal para ver el inventario de todas las sucursales de Wansoft en una sola pan
 - **Usuarios y permisos**: Administrador, Compras y Sucursal (solo ve sus sucursales).
 - **Diagnóstico de Wansoft**: consulta en vivo para ver qué columnas devuelve Wansoft y ajustar cuál es el código, la existencia, etc.
 - **Conteos desde el teléfono**: los empleados (rol Empleado) instalan el portal como app y cuentan a ciegas, por departamento, con o sin señal. El supervisor revisa diferencias, devuelve productos para recontar y al aprobar se generan los ajustes. Conteos programados por día y departamento.
+- **Archivo para Wansoft**: genera el .xls de "Carga de inventario físico" a partir de la plantilla que descargas de Wansoft. Productos con ajuste: existencia actual + diferencia; los demás conservan su existencia actual (el archivo es un inventario completo); presentaciones que no son la base van en 0. Al confirmar la carga, los ajustes pasan a capturados.
 - **Bitácora** de todas las acciones.
 
 ## Cómo se instala (Railway + Supabase)

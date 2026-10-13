@@ -204,6 +204,32 @@ CREATE TABLE IF NOT EXISTS conteo_eventos (
 ALTER TABLE ajustes ADD COLUMN IF NOT EXISTS conteo_id INTEGER REFERENCES conteos(id);
 CREATE SEQUENCE IF NOT EXISTS seq_folio_ct START 1;
 
+-- ── Carga de inventario físico a Wansoft (archivo .xls) ──────────
+-- Plantilla que Wansoft genera por sucursal ("Inventario físico contra sistema")
+CREATE TABLE IF NOT EXISTS wansoft_plantillas (
+  sucursal_id  INTEGER PRIMARY KEY REFERENCES sucursales(id) ON DELETE CASCADE,
+  nombre       TEXT,
+  archivo      BYTEA NOT NULL,
+  productos    INTEGER,
+  subido_por   INTEGER REFERENCES usuarios(id),
+  subido_en    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+-- Cada archivo generado: qué ajustes incluye y si ya se confirmó la carga en Wansoft
+CREATE TABLE IF NOT EXISTS cargas_wansoft (
+  id            SERIAL PRIMARY KEY,
+  folio         TEXT UNIQUE,
+  sucursal_id   INTEGER NOT NULL REFERENCES sucursales(id),
+  ajustes       INTEGER[] NOT NULL DEFAULT '{}',
+  resumen       JSONB,
+  archivo       BYTEA NOT NULL,
+  estado        TEXT NOT NULL DEFAULT 'generado' CHECK (estado IN ('generado','cargado','descartado')),
+  creado_por    INTEGER REFERENCES usuarios(id),
+  creado_en     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  confirmado_por INTEGER REFERENCES usuarios(id),
+  confirmado_en TIMESTAMPTZ
+);
+CREATE SEQUENCE IF NOT EXISTS seq_folio_cw START 1;
+
 -- Supabase: bloquear el acceso por la Data API pública (roles anon/authenticated).
 -- El portal se conecta directo como dueño de las tablas, así que esto no le afecta.
 DO $$
@@ -211,7 +237,8 @@ DECLARE t TEXT;
 BEGIN
   FOREACH t IN ARRAY ARRAY['usuarios','sucursales','inventario','catalogo','ajustes','proveedores','ordenes_compra',
                            'oc_lineas','recepciones','oc_eventos','bitacora','ajustes_config',
-                           'conteo_programas','conteos','conteo_lineas','conteo_eventos'] LOOP
+                           'conteo_programas','conteos','conteo_lineas','conteo_eventos',
+                           'wansoft_plantillas','cargas_wansoft'] LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
     IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname='anon') THEN
       EXECUTE format('REVOKE ALL ON TABLE %I FROM anon', t);

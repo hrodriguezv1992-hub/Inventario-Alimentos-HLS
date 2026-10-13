@@ -18,7 +18,12 @@ const PRODUCTOS = [
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const seed = (a, b) => Math.abs(Math.sin(a * 97 + b * 13) * 1000) % 1;
 
+// Sucursal 1027: productos de una plantilla real de carga de inventario físico
+const PLANTILLA = [['A1', 'QUESO MOZARELLA', 'Kilogramo', 'AA', 50.5, 180], ['A3', 'HARINA DE TRIGO', 'Kilogramo', 'AA', 120, 14],
+  ['A7', 'ACEITE', 'Litro', 'AA', 18, 40], ['B27', '7 UP 1.5', 'Pieza', 'BA', -2, 20]];
+
 function inventario(id) {
+  if (id === 1027) return `<NewDataSet>${PLANTILLA.map(([c, n, u, d, ex, cost]) => `<Table><CodigoProducto>${c}</CodigoProducto><Producto>${n}</Producto><UnidadDeMedida>${u}</UnidadDeMedida><Departamento>${d}</Departamento><Existencia>${ex}</Existencia><Monto>${ex * cost}</Monto></Table>`).join('')}</NewDataSet>`;
   let rows = '';
   PRODUCTOS.forEach(([c, n, u, d, cost], i) => {
     if (seed(id, i) < 0.08) return; // algunas sucursales no manejan todos

@@ -726,14 +726,15 @@ function descargarCSV() {
 const fAj = { estado: 'pendiente', sucursal_id: '' };
 async function vAjustes() {
   $('#vista').innerHTML = cabeza('Ajustes de inventario',
-    'Registra conteos y mermas por sucursal. Wansoft no recibe ajustes por su API, así que cada ajuste queda pendiente hasta que alguien lo capture allá y lo marque aquí.',
-    `<button class="btn primario" id="b-nuevo-aj">Nuevo ajuste o conteo</button>`) +
+    'Registra conteos y mermas por sucursal. Wansoft no recibe ajustes por su API: usa "Archivo para Wansoft" para descargar la carga de inventario físico, súbela en Wansoft y confirma aquí.',
+    `${puedeCapturarAj() ? '<button class="btn" id="b-carga-ws">Archivo para Wansoft</button>' : ''}<button class="btn primario" id="b-nuevo-aj">Nuevo ajuste o conteo</button>`) +
     `<div class="filtros">
       <div class="chips" role="group" aria-label="Estado">${[['pendiente', 'Pendientes'], ['capturado', 'Capturados'], ['cancelado', 'Cancelados'], ['', 'Todos']].map(([k, t]) =>
         `<button class="chip" data-e="${k}" aria-pressed="${fAj.estado === k}">${t}</button>`).join('')}</div>
       <select id="aj-suc" aria-label="Sucursal">${opcionesSucursal(fAj.sucursal_id, 'Todas las sucursales')}</select>
     </div><div id="aj-cont"><div class="vacio"><span class="carga"></span></div></div>`;
   $('#b-nuevo-aj').onclick = () => editorAjuste();
+  $('#b-carga-ws')?.addEventListener('click', () => panelCargaWansoft(fAj.sucursal_id));
   $$('[data-e]').forEach(b => b.onclick = () => { fAj.estado = b.dataset.e; vAjustes(); });
   $('#aj-suc').onchange = e => { fAj.sucursal_id = e.target.value; vAjustes(); };
   try {
@@ -1769,6 +1770,125 @@ function formPrograma(p, deps) {
 }
 
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+
+
+// ════════════════════════════════════════════════════════════════
+//  Archivo de carga de inventario físico para Wansoft
+// ════════════════════════════════════════════════════════════════
+function descargarBase64(nombre, base64) {
+  const bin = atob(base64), arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([arr], { type: 'application/vnd.ms-excel' }));
+  a.download = nombre; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+const leerArchivo = f => new Promise((ok, mal) => {
+  const r = new FileReader();
+  r.onload = () => ok(String(r.result).split(',')[1]);
+  r.onerror = () => mal(new Error('No se pudo leer el archivo'));
+  r.readAsDataURL(f);
+});
+
+async function panelCargaWansoft(sucId = '') {
+  let pendientes = [];
+  try { pendientes = await api('/ajustes?estado=pendiente'); } catch (e) { return toast(e.message, 'error'); }
+  const porSuc = new Map();
+  for (const a of pendientes) porSuc.set(a.sucursal_id, (porSuc.get(a.sucursal_id) || 0) + 1);
+  if (!sucId && porSuc.size === 1) sucId = [...porSuc.keys()][0];
+  const sucs = S.sucursales.filter(s => s.activa);
+
+  const panel = abrirPanel(`
+    <div class="panel-cab"><div><h2>Archivo para Wansoft</h2><div class="muted">Genera el archivo de "Carga de inventario físico" con los ajustes pendientes, para subirlo a Wansoft y emparejar el inventario.</div></div>${botonCerrar}</div>
+    <div class="panel-cuerpo">
+      <label class="campo">Sucursal<select id="cw-s"><option value="">Elige una sucursal</option>${sucs.map(s =>
+        `<option value="${s.id}" ${String(sucId) === String(s.id) ? 'selected' : ''}>${esc(s.nombre)}${porSuc.get(s.id) ? ` · ${porSuc.get(s.id)} ajuste${porSuc.get(s.id) === 1 ? '' : 's'} pendiente${porSuc.get(s.id) === 1 ? '' : 's'}` : ''}</option>`).join('')}</select></label>
+      <div id="cw-cuerpo"></div>
+    </div>`);
+
+  const sel = $('#cw-s', panel), cuerpo = $('#cw-cuerpo', panel);
+  const pintar = async () => {
+    const suc = sel.value;
+    if (!suc) { cuerpo.innerHTML = `<div class="vacio">Elige la sucursal.</div>`; return; }
+    cuerpo.innerHTML = `<div class="vacio"><span class="carga"></span></div>`;
+    let pl, lotes;
+    try { [pl, lotes] = await Promise.all([api(`/carga-wansoft/plantilla/${suc}`), api(`/carga-wansoft/lotes?sucursal_id=${suc}`)]); }
+    catch (e) { cuerpo.innerHTML = `<div class="aviso error">${esc(e.message)}</div>`; return; }
+    const pend = porSuc.get(+suc) || 0;
+    const abierto = lotes.find(l => l.estado === 'generado');
+    cuerpo.innerHTML = `
+      <ol class="pasos-carga" style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:16px">
+        <li class="caja" style="padding:16px"><h3>1. Plantilla de Wansoft</h3>
+          <p class="muted" style="margin:4px 0 10px">En Wansoft, entra a <b>Inventario físico contra sistema</b> de esta sucursal y descarga el archivo de carga. Súbelo aquí una vez; vuelve a subirlo solo si agregan productos o presentaciones.</p>
+          ${pl ? `<div class="aviso" style="margin-bottom:10px">Plantilla guardada: <b>${esc(pl.nombre)}</b> · ${pl.productos} productos · ${fechaHora(pl.subido_en)}${pl.subido_por ? ' por ' + esc(pl.subido_por) : ''}</div>` : ''}
+          <label class="btn" style="cursor:pointer">${pl ? 'Reemplazar plantilla' : 'Subir plantilla (.xls)'}<input type="file" id="cw-file" accept=".xls,.xlsx" class="oculto"></label></li>
+        <li class="caja" style="padding:16px"><h3>2. Revisar lo que se va a cargar</h3>
+          <p class="muted" style="margin:4px 0 10px">${pend ? `${pend} ajuste${pend === 1 ? '' : 's'} pendiente${pend === 1 ? '' : 's'}.` : 'No hay ajustes pendientes en esta sucursal.'} Se actualiza el inventario desde Wansoft y se calcula: existencia actual + diferencia del conteo. Lo que no se contó conserva su existencia actual.</p>
+          <button class="btn primario" id="cw-revisar" ${!pl || !pend ? 'disabled' : ''}>Revisar cambios</button>
+          <div id="cw-prev" style="margin-top:12px"></div></li>
+        <li class="caja" style="padding:16px"><h3>3. Cargar en Wansoft y confirmar</h3>
+          ${abierto ? `<p style="margin:4px 0 10px">Archivo <b>${esc(abierto.folio)}</b> generado ${fechaHora(abierto.creado_en)} con ${abierto.ajustes} ajuste${abierto.ajustes === 1 ? '' : 's'}.</p>
+            <div class="aviso alerta" style="margin-bottom:10px">Súbelo en Wansoft con <b>Cargar inventario físico</b> cuando la sucursal no esté vendiendo, de preferencia en cuanto lo descargues. Las ventas que pasen entre la descarga y la carga se perderían.</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-dl="${abierto.id}">Descargar otra vez</button>
+            <button class="btn primario" id="cw-conf" data-id="${abierto.id}">Ya lo cargué en Wansoft</button>
+            <button class="btn texto" id="cw-desc" data-id="${abierto.id}">Descartar</button></div>`
+            : '<p class="muted" style="margin:4px 0 0">Aquí aparece el archivo cuando lo generes.</p>'}</li>
+      </ol>
+      ${lotes.length ? `<div><h3 style="margin:18px 0 8px">Archivos anteriores</h3><div class="caja"><table><thead><tr><th>Folio</th><th>Generado</th><th class="num">Ajustes</th><th>Estado</th><th></th></tr></thead><tbody>
+        ${lotes.map(l => `<tr><td><b>${esc(l.folio)}</b></td><td>${fechaHora(l.creado_en)}<br><span class="muted">${esc(l.creado_por || '')}</span></td><td class="num">${l.ajustes}</td>
+          <td><span class="est ${{ generado: 'pendiente', cargado: 'recibida', descartado: 'cancelada' }[l.estado]}">${{ generado: 'Por cargar', cargado: 'Cargado en Wansoft', descartado: 'Descartado' }[l.estado]}</span>
+          ${l.confirmado_por ? `<br><span class="muted">${esc(l.confirmado_por)}, ${fechaHora(l.confirmado_en)}</span>` : ''}</td>
+          <td><button class="btn mini" data-dl="${l.id}">Descargar</button></td></tr>`).join('')}</tbody></table></div></div>` : ''}`;
+
+    $('#cw-file', cuerpo).onchange = async e => {
+      const f = e.target.files[0]; if (!f) return;
+      try {
+        const r = await api(`/carga-wansoft/plantilla/${suc}`, { method: 'POST', body: { nombre: f.name, base64: await leerArchivo(f) } });
+        toast(`Plantilla guardada: ${r.productos} productos`); pintar();
+      } catch (er) { toast(er.message, 'error'); }
+    };
+    $$('[data-dl]', cuerpo).forEach(b => b.onclick = () => accion(b, async () => {
+      const r = await api(`/carga-wansoft/lotes/${b.dataset.dl}/archivo`); descargarBase64(r.nombre, r.base64);
+    }));
+    $('#cw-conf', cuerpo)?.addEventListener('click', e => {
+      if (!confirm('¿Ya subiste este archivo en Wansoft y la carga terminó bien? Los ajustes incluidos pasarán a "Capturado en Wansoft".')) return;
+      accion(e.currentTarget, async () => {
+        const r = await api(`/carga-wansoft/lotes/${e.currentTarget.dataset.id}/confirmar`, { method: 'POST' });
+        toast(`${r.ajustes} ajuste${r.ajustes === 1 ? '' : 's'} marcado${r.ajustes === 1 ? '' : 's'} como capturado${r.ajustes === 1 ? '' : 's'}`);
+        if (S.vista === 'ajustes') vAjustes();
+        panelCargaWansoft(suc);
+      });
+    });
+    $('#cw-desc', cuerpo)?.addEventListener('click', e => accion(e.currentTarget, async () => {
+      await api(`/carga-wansoft/lotes/${e.currentTarget.dataset.id}/descartar`, { method: 'POST' }); pintar();
+    }));
+    $('#cw-revisar', cuerpo)?.addEventListener('click', e => accion(e.currentTarget, async () => {
+      const r = await api(`/carga-wansoft/preparar/${suc}`);
+      const prev = $('#cw-prev', cuerpo);
+      const avisos = [];
+      if (r.sync && !r.sync.ok) avisos.push(`<div class="aviso error">No se pudo actualizar desde Wansoft: ${esc(r.sync.error || '')}. No se puede generar el archivo hasta que se actualice.</div>`);
+      if (!r.sync) avisos.push(`<div class="aviso error">Esta sucursal no tiene claves de Wansoft. Sin su inventario actual no se puede generar el archivo.</div>`);
+      if (r.fuera.length) avisos.push(`<div class="aviso alerta">${r.fuera.length} producto${r.fuera.length === 1 ? ' no está' : 's no están'} en la plantilla y se quedan pendientes: ${esc(r.fuera.map(f => f.nombre || f.codigo).join(', '))}. Si son nuevos, descarga una plantilla nueva de Wansoft.</div>`);
+      if (r.negativos.length) avisos.push(`<div class="aviso alerta">${r.negativos.length} producto${r.negativos.length === 1 ? ' tiene' : 's tienen'} existencia negativa en Wansoft y quedará${r.negativos.length === 1 ? '' : 'n'} en 0 al cargar (${esc(r.negativos.slice(0, 8).join(', '))}${r.negativos.length > 8 ? '…' : ''}).</div>`);
+      prev.innerHTML = avisos.join('') + (r.cambios.length ? `<div class="caja tabla-scroll" style="margin-top:10px"><table><thead><tr><th>Producto</th><th class="num">Wansoft ahora</th><th class="num">Diferencia del conteo</th><th class="num">Se cargará</th></tr></thead><tbody>
+        ${r.cambios.map(c => `<tr><td><b>${esc(c.nombre || c.codigo)}</b><br><span class="muted">${esc(c.codigo)} · ${esc(c.unidad || '')} · ${esc(c.folio)}</span></td>
+          <td class="num">${fmt(c.actual)}</td><td class="num ${c.diferencia < 0 ? 'dif-neg' : 'dif-pos'}">${c.diferencia > 0 ? '+' : ''}${fmt(c.diferencia)}</td>
+          <td class="num"><b>${fmt(c.cargar)}</b>${c.ajustadoACero ? '<br><span class="muted">no puede ser negativo</span>' : ''}</td></tr>`).join('')}</tbody></table></div>
+        <p class="muted" style="margin:10px 0">Los otros ${r.productos - r.cambios.length} productos de la plantilla se cargan con su existencia actual de Wansoft, en la unidad base; las cajas y otras presentaciones van en 0.</p>
+        <button class="btn primario" id="cw-gen" ${r.sync?.ok ? '' : 'disabled'}>Descargar archivo para Wansoft</button>`
+        : '<div class="aviso">Ninguno de los ajustes pendientes está en la plantilla.</div>');
+      $('#cw-gen', prev)?.addEventListener('click', ev => accion(ev.currentTarget, async () => {
+        const g = await api(`/carga-wansoft/generar/${suc}`, { method: 'POST' });
+        const f = await api(`/carga-wansoft/lotes/${g.id}/archivo`);
+        descargarBase64(f.nombre, f.base64);
+        toast(`${g.folio} descargado. Súbelo en Wansoft y luego confirma aquí.`);
+        pintar();
+      }));
+    }));
+  };
+  sel.onchange = pintar;
+  pintar();
+}
 
 iniciar();
 </script>
