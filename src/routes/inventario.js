@@ -62,6 +62,38 @@ r.get('/consolidado', async (req, res) => {
   });
 });
 
+// Lista completa de productos de una sucursal para armar un pedido:
+// catálogo + inventario, con existencia (0 si está agotado) y lo que ya viene en camino
+r.get('/sucursal/:id/productos', async (req, res) => {
+  const suc = Number(req.params.id);
+  if (!puedeSucursal(req.user, suc)) return res.status(403).json({ error: 'No tienes acceso a esta sucursal' });
+  const { rows } = await pool.query(`
+    WITH cods AS (
+      SELECT codigo FROM catalogo
+      UNION SELECT codigo FROM inventario WHERE sucursal_id = $1
+    ),
+    transito AS (
+      SELECT l.codigo, SUM(GREATEST(l.cantidad - l.cantidad_recibida, 0)) AS cant
+      FROM oc_lineas l JOIN ordenes_compra o ON o.id = l.oc_id
+      WHERE o.sucursal_id = $1 AND o.estado IN ('enviada','recibida_parcial') GROUP BY l.codigo
+    )
+    SELECT k.codigo,
+           COALESCE(i.nombre, c.nombre) AS nombre,
+           COALESCE(i.unidad, c.unidad) AS unidad,
+           COALESCE(i.departamento, c.departamento) AS departamento,
+           c.tipo,
+           COALESCE(NULLIF(i.costo,0), NULLIF(c.costo_ideal,0),
+                    (SELECT NULLIF(MAX(x.costo),0) FROM inventario x WHERE x.codigo = k.codigo)) AS costo,
+           COALESCE(i.existencia, 0) AS existencia,
+           COALESCE(t.cant, 0) AS en_camino
+    FROM cods k
+    LEFT JOIN catalogo c ON c.codigo = k.codigo
+    LEFT JOIN inventario i ON i.codigo = k.codigo AND i.sucursal_id = $1
+    LEFT JOIN transito t ON t.codigo = k.codigo
+    ORDER BY (COALESCE(i.existencia,0) <= 0) DESC, 4 NULLS LAST, 2 NULLS LAST`, [suc]);
+  res.json(rows);
+});
+
 // Buscador de productos (para órdenes y ajustes)
 r.get('/productos', async (req, res) => {
   const q = sinAcentos(req.query.q);

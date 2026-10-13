@@ -818,9 +818,17 @@ function editorOrden(oc = null, pre = {}) {
   const base = oc || { sucursal_id: pre.sucursal_id || '', proveedor_id: '', fecha_entrega: '', notas: '', lineas: pre.lineas || [] };
   const misSucs = S.user.rol === 'sucursal' ? S.user.sucursales : null;
   if (!base.sucursal_id && misSucs?.length === 1) base.sucursal_id = misSucs[0];
-  const lineas = base.lineas.map(l => ({ codigo: l.codigo, nombre: l.nombre, unidad: l.unidad, cantidad: l.cantidad ?? '', costo_unitario: l.costo_unitario ?? l.costo ?? 0, existencia_sucursal: l.existencia_sucursal ?? l.existencia_actual }));
+
+  // Lo que se va a pedir, por código. Lo que ya traía la orden (o el producto elegido desde el inventario) se precarga.
+  const pedido = new Map(base.lineas.map(l => [l.codigo, {
+    codigo: l.codigo, nombre: l.nombre, unidad: l.unidad,
+    cantidad: l.cantidad ?? '', costo_unitario: l.costo_unitario ?? l.costo ?? 0,
+  }]));
+  let lista = [];               // todos los productos de la sucursal
+  const vista = { q: '', dep: '', filtro: 'todos' };
+
   const panel = abrirPanel(`
-    <div class="panel-cab"><div><h2>${oc ? 'Editar ' + esc(oc.folio) : 'Nueva orden de compra'}</h2><div class="muted">Se guarda como borrador hasta que la envíes.</div></div>${botonCerrar}</div>
+    <div class="panel-cab"><div><h2>${oc ? 'Editar ' + esc(oc.folio) : 'Nueva orden de compra'}</h2><div class="muted">Elige la sucursal y escribe cuánto pedir de cada producto. Se guarda como borrador hasta que la envíes.</div></div>${botonCerrar}</div>
     <div class="panel-cuerpo">
       <div class="rejilla">
         <label class="campo">Sucursal que recibe<select id="oc-s">${opcionesSucursal(base.sucursal_id)}</select></label>
@@ -828,51 +836,112 @@ function editorOrden(oc = null, pre = {}) {
         <label class="campo">Fecha de entrega esperada<input type="date" id="oc-f" value="${esc((base.fecha_entrega || '').slice(0, 10))}"></label>
       </div>
       <label class="campo">Notas para el proveedor o el almacén<textarea id="oc-n" rows="2">${esc(base.notas || '')}</textarea></label>
-      <div><label class="campo" style="margin-bottom:4px">Agregar producto</label><div id="oc-bus"></div></div>
-      <div class="caja tabla-scroll" id="oc-items"></div>
+      <div class="filtros" style="margin:0">
+        <input type="search" id="oc-q" placeholder="Filtrar por nombre o código" aria-label="Filtrar productos">
+        <select id="oc-dep" aria-label="Departamento"><option value="">Todos los departamentos</option></select>
+        <div class="chips" role="group" aria-label="Mostrar">
+          <button class="chip" data-f="todos" aria-pressed="true">Todos</button>
+          <button class="chip" data-f="agotados">Agotados</button>
+          <button class="chip" data-f="pedido">En el pedido</button>
+        </div>
+      </div>
+      <div class="caja tabla-scroll" id="oc-items" style="max-height:calc(100vh - 430px);min-height:200px"></div>
     </div>
     <div class="panel-pie">
       <button class="btn primario" id="oc-enviar">Guardar y enviar</button>
       <button class="btn" id="oc-borrador">Guardar borrador</button>
       <button class="btn" onclick="cerrarPanel()">Cancelar</button>
-      <span style="margin-left:auto;align-self:center">Total: <b id="oc-total">$0.00</b></span>
+      <span style="margin-left:auto;align-self:center"><span id="oc-cuenta" class="muted"></span> Total: <b id="oc-total">$0.00</b></span>
     </div>`);
 
-  const total = () => lineas.reduce((a, l) => a + (Number(l.cantidad) || 0) * (Number(l.costo_unitario) || 0), 0);
-  const pintar = () => {
-    $('#oc-total', panel).textContent = dinero(total());
-    if (!lineas.length) { $('#oc-items', panel).innerHTML = `<div class="vacio">Busca los productos que vas a pedir.</div>`; return; }
-    $('#oc-items', panel).innerHTML = `<table><thead><tr><th>Producto</th><th class="num">Existencia en sucursal</th><th class="num">Cantidad</th><th class="num">Costo unitario</th><th class="num">Importe</th><th></th></tr></thead><tbody>
-      ${lineas.map((l, i) => `<tr><td><b>${esc(l.nombre || l.codigo)}</b><br><span class="muted">${esc(l.codigo)} · ${esc(l.unidad || '')}</span></td>
-        <td class="num">${fmt(l.existencia_sucursal)}</td>
-        <td class="num"><input type="number" min="0" step="any" data-i="${i}" data-k="cantidad" value="${esc(l.cantidad)}" aria-label="Cantidad de ${esc(l.nombre)}"></td>
-        <td class="num"><input type="number" min="0" step="any" data-i="${i}" data-k="costo_unitario" value="${esc(l.costo_unitario)}" aria-label="Costo de ${esc(l.nombre)}"></td>
-        <td class="num" data-imp="${i}">${dinero((Number(l.cantidad) || 0) * (Number(l.costo_unitario) || 0))}</td>
-        <td><button class="btn mini texto" data-quitar="${i}">Quitar</button></td></tr>`).join('')}</tbody></table>`;
-    $$('input[data-i]', panel).forEach(inp => inp.addEventListener('input', () => {
-      const l = lineas[inp.dataset.i]; l[inp.dataset.k] = inp.value;
-      $(`[data-imp="${inp.dataset.i}"]`, panel).textContent = dinero((Number(l.cantidad) || 0) * (Number(l.costo_unitario) || 0));
-      $('#oc-total', panel).textContent = dinero(total());
-    }));
-    $$('[data-quitar]', panel).forEach(b => b.onclick = () => { lineas.splice(b.dataset.quitar, 1); pintar(); });
-  };
   const sel = $('#oc-s', panel);
-  montarBuscador($('#oc-bus', panel), {
-    sucursal: () => sel.value,
-    alElegir: p => {
-      if (lineas.some(x => x.codigo === p.codigo)) return toast('Ese producto ya está en la orden');
-      lineas.push({ codigo: p.codigo, nombre: p.nombre, unidad: p.unidad, cantidad: '', costo_unitario: p.costo ? Number(p.costo) : 0, existencia_sucursal: p.existencia_sucursal });
-      pintar();
-      $(`input[data-i="${lineas.length - 1}"][data-k=cantidad]`, panel)?.focus();
-    },
+  const lineasPedido = () => [...pedido.values()].filter(l => Number(l.cantidad) > 0);
+  const actualizarTotales = () => {
+    const ls = lineasPedido();
+    $('#oc-total', panel).textContent = dinero(ls.reduce((a, l) => a + Number(l.cantidad) * (Number(l.costo_unitario) || 0), 0));
+    $('#oc-cuenta', panel).textContent = ls.length ? `${ls.length} producto${ls.length === 1 ? '' : 's'} ·` : '';
+  };
+
+  const pintar = () => {
+    actualizarTotales();
+    const cont = $('#oc-items', panel);
+    if (!sel.value) { cont.innerHTML = `<div class="vacio">Elige la sucursal para ver sus productos y existencias.</div>`; return; }
+    const q = vista.q.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const norm = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const filas = lista.filter(p =>
+      (!q || norm(p.nombre).includes(q) || norm(p.codigo).includes(q)) &&
+      (!vista.dep || p.departamento === vista.dep) &&
+      (vista.filtro !== 'agotados' || Number(p.existencia) <= 0) &&
+      (vista.filtro !== 'pedido' || Number(pedido.get(p.codigo)?.cantidad) > 0));
+    if (!filas.length) {
+      cont.innerHTML = `<div class="vacio">${lista.length ? 'Ningún producto coincide con el filtro.' : 'Esta sucursal no tiene productos todavía. Actualízala desde Sucursales y Wansoft.'}</div>`;
+      return;
+    }
+    cont.innerHTML = `<table><thead><tr><th>Producto</th><th>Departamento</th><th class="num">Existencia</th><th class="num">En camino</th><th class="num">Pedir</th><th class="num">Costo unitario</th><th class="num">Importe</th></tr></thead><tbody>
+      ${filas.map(p => {
+        const l = pedido.get(p.codigo);
+        const ex = Number(p.existencia);
+        const cant = l?.cantidad ?? '';
+        const costo = l?.costo_unitario ?? (p.costo != null ? Number(p.costo) : 0);
+        return `<tr${Number(cant) > 0 ? ' style="background:var(--albahaca-claro)"' : ''}>
+          <td><b>${esc(p.nombre || p.codigo)}</b><br><span class="muted">${esc(p.codigo)} · ${esc(p.unidad || '')}</span></td>
+          <td>${esc(p.departamento || '—')}</td>
+          <td class="num ${ex <= 0 ? 'dif-neg' : ''}">${ex <= 0 ? (ex < 0 ? fmt(ex) : 'Agotado') : fmt(ex)}</td>
+          <td class="num" style="color:var(--azul)">${Number(p.en_camino) > 0 ? fmt(p.en_camino) : ''}</td>
+          <td class="num"><input type="number" min="0" step="any" data-c="${esc(p.codigo)}" data-k="cantidad" value="${esc(cant)}" aria-label="Cantidad a pedir de ${esc(p.nombre)}"></td>
+          <td class="num"><input type="number" min="0" step="any" data-c="${esc(p.codigo)}" data-k="costo_unitario" value="${esc(costo)}" aria-label="Costo de ${esc(p.nombre)}"></td>
+          <td class="num" data-imp="${esc(p.codigo)}">${Number(cant) > 0 ? dinero(Number(cant) * (Number(costo) || 0)) : ''}</td></tr>`;
+      }).join('')}</tbody></table>`;
+    $$('input[data-c]', cont).forEach(inp => inp.addEventListener('input', () => {
+      const p = lista.find(x => x.codigo === inp.dataset.c);
+      const l = pedido.get(p.codigo) || { codigo: p.codigo, nombre: p.nombre, unidad: p.unidad, cantidad: '', costo_unitario: p.costo != null ? Number(p.costo) : 0 };
+      l[inp.dataset.k] = inp.value;
+      pedido.set(p.codigo, l);
+      const tr = inp.closest('tr');
+      tr.style.background = Number(l.cantidad) > 0 ? 'var(--albahaca-claro)' : '';
+      $(`[data-imp="${CSS.escape(p.codigo)}"]`, cont).textContent = Number(l.cantidad) > 0 ? dinero(Number(l.cantidad) * (Number(l.costo_unitario) || 0)) : '';
+      actualizarTotales();
+    }));
+    // Enter baja al siguiente producto
+    $$('input[data-k=cantidad]', cont).forEach((inp, i, all) => inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); all[i + 1]?.focus(); all[i + 1]?.select(); }
+    }));
+  };
+
+  const cargarLista = async () => {
+    lista = [];
+    if (!sel.value) { pintar(); return; }
+    $('#oc-items', panel).innerHTML = `<div class="vacio"><span class="carga"></span></div>`;
+    try {
+      lista = await api(`/inventario/sucursal/${sel.value}/productos`);
+      // Productos de la orden que ya no estén en el catálogo se conservan
+      for (const l of pedido.values()) if (!lista.some(p => p.codigo === l.codigo)) lista.unshift({ ...l, existencia: 0, en_camino: 0, costo: l.costo_unitario });
+      const deps = [...new Set(lista.map(p => p.departamento).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+      $('#oc-dep', panel).innerHTML = '<option value="">Todos los departamentos</option>' + deps.map(d => `<option>${esc(d)}</option>`).join('');
+      vista.dep = '';
+    } catch (e) { toast(e.message, 'error'); }
+    pintar();
+    // Si se llegó desde una celda del inventario, enfocar ese producto
+    const primero = [...pedido.keys()][0];
+    if (primero && !oc) { vista.filtro = 'pedido'; $$('[data-f]', panel).forEach(x => x.setAttribute('aria-pressed', x.dataset.f === 'pedido')); pintar(); $('input[data-k=cantidad]', panel)?.focus(); }
+  };
+
+  sel.addEventListener('change', () => {
+    if (lineasPedido().length && !confirm('Cambiar de sucursal conserva las cantidades que ya escribiste. ¿Continuar?')) return;
+    cargarLista();
   });
-  pintar();
-  if (lineas.length) setTimeout(() => $('input[data-k=cantidad]', panel)?.focus(), 50);
+  let t;
+  $('#oc-q', panel).addEventListener('input', e => { clearTimeout(t); t = setTimeout(() => { vista.q = e.target.value.trim(); pintar(); }, 150); });
+  $('#oc-dep', panel).addEventListener('change', e => { vista.dep = e.target.value; pintar(); });
+  $$('[data-f]', panel).forEach(b => b.addEventListener('click', () => {
+    vista.filtro = b.dataset.f; $$('[data-f]', panel).forEach(x => x.setAttribute('aria-pressed', x === b)); pintar();
+  }));
+  cargarLista();
 
   const guardar = (enviar) => async () => {
     if (!sel.value) throw new Error('Elige la sucursal que recibe');
-    const ls = lineas.filter(l => Number(l.cantidad) > 0);
-    if (!ls.length) throw new Error('Captura la cantidad de al menos un producto');
+    const ls = lineasPedido();
+    if (!ls.length) throw new Error('Escribe la cantidad a pedir de al menos un producto');
     const body = { sucursal_id: +sel.value, proveedor_id: $('#oc-p', panel).value || null, fecha_entrega: $('#oc-f', panel).value || null,
       notas: $('#oc-n', panel).value, lineas: ls.map(l => ({ codigo: l.codigo, nombre: l.nombre, unidad: l.unidad, cantidad: Number(l.cantidad), costo_unitario: Number(l.costo_unitario) || 0 })) };
     let id;
