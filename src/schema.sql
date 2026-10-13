@@ -6,8 +6,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
   nombre        TEXT NOT NULL,
   usuario       TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
-  rol           TEXT NOT NULL DEFAULT 'sucursal' CHECK (rol IN ('admin','compras','sucursal')),
-  sucursales    INTEGER[] NOT NULL DEFAULT '{}',   -- solo aplica al rol 'sucursal'
+  rol           TEXT NOT NULL DEFAULT 'sucursal',
+  sucursales    INTEGER[] NOT NULL DEFAULT '{}',   -- aplica a sucursal, supervisor y empleado
   activo        BOOLEAN NOT NULL DEFAULT TRUE,
   creado_en     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -143,13 +143,75 @@ CREATE TABLE IF NOT EXISTS ajustes_config (
 CREATE SEQUENCE IF NOT EXISTS seq_folio_oc START 1;
 CREATE SEQUENCE IF NOT EXISTS seq_folio_aj START 1;
 
+-- ── Roles ────────────────────────────────────────────────────────
+-- admin: todo · compras: órdenes y ajustes de todas · supervisor: revisa conteos de sus sucursales
+-- sucursal: gerente de tienda · empleado: solo captura conteos (a ciegas)
+ALTER TABLE usuarios DROP CONSTRAINT IF EXISTS usuarios_rol_check;
+ALTER TABLE usuarios ADD CONSTRAINT usuarios_rol_check CHECK (rol IN ('admin','compras','supervisor','sucursal','empleado'));
+
+-- ── Conteos físicos desde el teléfono ────────────────────────────
+CREATE TABLE IF NOT EXISTS conteo_programas (
+  id            SERIAL PRIMARY KEY,
+  nombre        TEXT NOT NULL,
+  departamentos TEXT[] NOT NULL DEFAULT '{}',   -- vacío = todos los productos
+  dias          INTEGER[] NOT NULL DEFAULT '{}', -- 0=domingo … 6=sábado; vacío = todos los días
+  sucursales    INTEGER[] NOT NULL DEFAULT '{}', -- vacío = todas
+  activo        BOOLEAN NOT NULL DEFAULT TRUE,
+  creado_en     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS conteos (
+  id              SERIAL PRIMARY KEY,
+  folio           TEXT UNIQUE,
+  cliente_id      TEXT UNIQUE,            -- evita duplicados si el teléfono reintenta el envío
+  sucursal_id     INTEGER NOT NULL REFERENCES sucursales(id),
+  programa_id     INTEGER REFERENCES conteo_programas(id) ON DELETE SET NULL,
+  nombre          TEXT,
+  estado          TEXT NOT NULL DEFAULT 'enviado' CHECK (estado IN ('enviado','devuelto','aprobado','cancelado')),
+  creado_por      INTEGER REFERENCES usuarios(id),
+  contado_en      TIMESTAMPTZ,            -- cuándo empezó a contar (según el teléfono)
+  enviado_en      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  sistema_en      TIMESTAMPTZ,            -- de cuándo es la existencia de Wansoft comparada
+  revisado_por    INTEGER REFERENCES usuarios(id),
+  revisado_en     TIMESTAMPTZ,
+  comentario      TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_conteos_estado ON conteos(estado, sucursal_id);
+
+CREATE TABLE IF NOT EXISTS conteo_lineas (
+  id                 SERIAL PRIMARY KEY,
+  conteo_id          INTEGER NOT NULL REFERENCES conteos(id) ON DELETE CASCADE,
+  codigo             TEXT NOT NULL,
+  nombre             TEXT,
+  unidad             TEXT,
+  departamento       TEXT,
+  cantidad           NUMERIC NOT NULL CHECK (cantidad >= 0),
+  existencia_sistema NUMERIC,
+  costo              NUMERIC,
+  recontar           BOOLEAN NOT NULL DEFAULT FALSE,
+  UNIQUE (conteo_id, codigo)
+);
+
+CREATE TABLE IF NOT EXISTS conteo_eventos (
+  id         SERIAL PRIMARY KEY,
+  conteo_id  INTEGER NOT NULL REFERENCES conteos(id) ON DELETE CASCADE,
+  tipo       TEXT NOT NULL,
+  detalle    TEXT,
+  usuario_id INTEGER REFERENCES usuarios(id),
+  creado_en  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE ajustes ADD COLUMN IF NOT EXISTS conteo_id INTEGER REFERENCES conteos(id);
+CREATE SEQUENCE IF NOT EXISTS seq_folio_ct START 1;
+
 -- Supabase: bloquear el acceso por la Data API pública (roles anon/authenticated).
 -- El portal se conecta directo como dueño de las tablas, así que esto no le afecta.
 DO $$
 DECLARE t TEXT;
 BEGIN
   FOREACH t IN ARRAY ARRAY['usuarios','sucursales','inventario','catalogo','ajustes','proveedores','ordenes_compra',
-                           'oc_lineas','recepciones','oc_eventos','bitacora','ajustes_config'] LOOP
+                           'oc_lineas','recepciones','oc_eventos','bitacora','ajustes_config',
+                           'conteo_programas','conteos','conteo_lineas','conteo_eventos'] LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
     IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname='anon') THEN
       EXECUTE format('REVOKE ALL ON TABLE %I FROM anon', t);

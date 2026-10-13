@@ -2,7 +2,14 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1B2A23">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icono.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icono-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Conteos">
 <title>Pedidos Mozzarella Express</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,7 +61,7 @@ a{color:var(--albahaca)}
 .cabeza .sub{color:var(--tinta-2);font-size:14px;margin-top:4px;max-width:70ch}
 .cabeza .acciones{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
 .btn.menu-movil{display:none}
-table.ancho{min-width:1150px}
+table.ancho{min-width:1300px}
 
 /* ── Controles ───────────────────────── */
 .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--linea);background:var(--papel);padding:7px 13px;border-radius:var(--r-s);cursor:pointer;font-weight:500;white-space:nowrap}
@@ -195,6 +202,56 @@ td input[type=number]{width:100px;text-align:right}
   .matriz .col-total{position:static}
   .matriz .col-prod{min-width:170px}
 }
+
+/* ── App de conteo (teléfono) ───────────────────────── */
+.movil{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--masa)}
+.movil-cab{background:var(--tinta);color:#fff;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:5}
+.movil-cab b{font-family:var(--display);font-size:16px;display:block;line-height:1.15}
+.movil-cab span{font-size:12.5px;color:#AFC2B6}
+.movil-cab .btn{margin-left:auto;background:transparent;color:#DCE6DF;border-color:rgba(255,255,255,.25)}
+.movil-cuerpo{padding:16px;display:flex;flex-direction:column;gap:16px;max-width:720px;width:100%;margin:0 auto}
+.movil-cuerpo h2{font-size:18px}
+.tarea{display:flex;align-items:center;gap:12px;background:var(--papel);border:1px solid var(--linea);border-radius:var(--r-m);padding:14px 16px;width:100%;text-align:left;cursor:pointer;font:inherit}
+.tarea:hover{border-color:var(--albahaca)}
+.tarea b{display:block;font-size:16px}
+.tarea .muted{font-size:13.5px}
+.tarea .est{margin-left:auto;flex:none}
+.tarea.hecha{opacity:.65}
+.lista-tareas{display:flex;flex-direction:column;gap:8px}
+.banner-instalar{display:flex;gap:12px;align-items:center;background:var(--albahaca-claro);border:1px solid #C5DDCD;border-radius:var(--r-m);padding:12px 14px;font-size:14px}
+.banner-instalar .btn{margin-left:auto;flex:none}
+
+/* Sesión de conteo */
+.contando{position:fixed;inset:0;z-index:45;background:var(--masa);display:flex;flex-direction:column}
+.contando-cab{background:var(--papel);border-bottom:1px solid var(--linea);padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top))}
+.contando-cab .fila{display:flex;align-items:center;gap:10px}
+.contando-cab h2{font-size:17px;line-height:1.2}
+.contando-cab .avance{height:5px;background:var(--linea-2);border-radius:3px;margin-top:10px;overflow:hidden}
+.contando-cab .avance i{display:block;height:100%;background:var(--albahaca);transition:width .2s}
+@media (prefers-reduced-motion:reduce){.contando-cab .avance i{transition:none}}
+.contando-filtros{display:flex;gap:8px;padding:10px 16px;overflow-x:auto;background:var(--papel);border-bottom:1px solid var(--linea);scrollbar-width:none}
+.contando-filtros .chip{flex:none}
+.contando-buscar{padding:10px 16px 0}
+.contando-buscar input{width:100%;font-size:16px;padding:10px 12px}
+.contando-lista{flex:1;overflow:auto;padding:8px 16px 120px;-webkit-overflow-scrolling:touch}
+.dep-titulo{font-size:13px;font-weight:600;color:var(--tinta-2);padding:14px 2px 6px;position:sticky;top:-8px;background:var(--masa);z-index:1}
+.prod{display:flex;align-items:center;gap:12px;background:var(--papel);border:1px solid var(--linea);border-radius:var(--r-m);padding:10px 12px;margin-bottom:8px}
+.prod.contado{border-color:#9CC6AE;background:#F4FAF6}
+.prod.recontar{border-color:var(--ambar);background:var(--ambar-claro)}
+.prod .info{flex:1;min-width:0}
+.prod .info b{display:block;font-size:15.5px;line-height:1.25}
+.prod .info span{font-size:13px;color:var(--tinta-3)}
+.prod input{width:96px;font-size:20px;font-weight:600;text-align:right;padding:8px 10px;border-radius:var(--r-s);border:1.5px solid var(--linea)}
+.prod input:focus{border-color:var(--albahaca);outline:none;box-shadow:0 0 0 3px rgba(45,106,77,.18)}
+.contando-pie{position:fixed;left:0;right:0;bottom:0;background:var(--papel);border-top:1px solid var(--linea);padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));display:flex;gap:10px;align-items:center;z-index:2}
+.contando-pie .btn{padding:12px 18px;font-size:16px}
+.contando-pie .btn.primario{margin-left:auto}
+.pendientes-envio{background:var(--ambar-claro);color:#6D4A0C;border-radius:var(--r-m);padding:12px 14px;font-size:14px;display:flex;gap:10px;align-items:center}
+
+/* Revisión de conteos */
+.dif-fila td{background:#FFFBF2}
+td.chk{width:44px;text-align:center}
+td.chk input{width:18px;height:18px}
 </style>
 </head>
 <body>
@@ -226,7 +283,10 @@ const hace = v => {
 };
 const ESTADO_OC = { borrador: 'Borrador', enviada: 'Enviada', recibida_parcial: 'Recibida parcial', recibida: 'Recibida', cancelada: 'Cancelada' };
 const ESTADO_AJ = { pendiente: 'Pendiente en Wansoft', capturado: 'Capturado en Wansoft', cancelado: 'Cancelado' };
-const ROLES = { admin: 'Administrador', compras: 'Compras', sucursal: 'Sucursal' };
+const ROLES = { admin: 'Administrador', compras: 'Compras', supervisor: 'Supervisor', sucursal: 'Gerente de sucursal', empleado: 'Empleado (solo conteos)' };
+const ROLES_ACOTADOS = ['sucursal', 'supervisor', 'empleado'];
+const acotado = () => ROLES_ACOTADOS.includes(S.user?.rol);
+const esRevisor = () => ['admin', 'supervisor'].includes(S.user?.rol);
 
 const S = {
   token: null, user: null, sucursales: [], proveedores: [], motivos: [],
@@ -268,6 +328,7 @@ async function accion(btn, fn) {
 
 const esAdmin = () => S.user?.rol === 'admin';
 const esCompras = () => ['admin', 'compras'].includes(S.user?.rol);
+const puedeCapturarAj = () => ['admin', 'compras', 'supervisor'].includes(S.user?.rol);
 
 function opcionesSucursal(sel, vacia = 'Elige una sucursal') {
   return `<option value="">${esc(vacia)}</option>` + S.sucursales.filter(s => s.activa).map(s =>
@@ -355,6 +416,7 @@ async function iniciar() {
   } catch { pintarLogin(); }
 }
 async function cargarCatalogos() {
+  if (S.user?.rol === 'empleado') { S.sucursales = []; S.proveedores = []; S.motivos = []; return; }
   const [s, p, m] = await Promise.all([api('/sucursales'), api('/proveedores'), api('/ajustes/motivos')]);
   S.sucursales = s.sucursales; S.proveedores = p; S.motivos = m;
 }
@@ -412,7 +474,9 @@ function logo(size = 30) {
 const VISTAS = [
   { id: 'inventario', t: 'Inventario', grupo: 'Operación' },
   { id: 'ordenes', t: 'Órdenes de compra', grupo: 'Operación' },
+  { id: 'conteos', t: 'Conteos', grupo: 'Operación', roles: ['admin', 'supervisor', 'compras'] },
   { id: 'ajustes', t: 'Ajustes', grupo: 'Operación' },
+  { id: 'contar', t: 'Capturar conteo', grupo: 'Operación', roles: ['admin', 'supervisor', 'sucursal'] },
   { id: 'proveedores', t: 'Proveedores', grupo: 'Operación' },
   { id: 'sucursales', t: 'Sucursales y Wansoft', grupo: 'Administración', admin: true },
   { id: 'usuarios', t: 'Usuarios', grupo: 'Administración', admin: true },
@@ -420,12 +484,15 @@ const VISTAS = [
   { id: 'bitacora', t: 'Bitácora', grupo: 'Administración', admin: true },
 ];
 
+const vistaPermitida = v => (!v.admin || esAdmin()) && (!v.roles || v.roles.includes(S.user.rol));
+
 function pintarApp() {
+  if (S.user.rol === 'empleado') return pintarAppEmpleado();
   let grupo = '';
-  const nav = VISTAS.filter(v => !v.admin || esAdmin()).map(v => {
+  const nav = VISTAS.filter(vistaPermitida).map(v => {
     const g = v.grupo !== grupo ? `<div class="nav-grupo">${esc(v.grupo)}</div>` : '';
     grupo = v.grupo;
-    return g + `<a href="#${v.id}" data-v="${v.id}">${esc(v.t)}</a>`;
+    return g + `<a href="#${v.id}" data-v="${v.id}">${esc(v.t)}${v.id === 'conteos' ? '<span class="cuenta oculto" id="cuenta-conteos"></span>' : ''}</a>`;
   }).join('');
   $('#raiz').innerHTML = `
   <div class="app">
@@ -438,11 +505,20 @@ function pintarApp() {
     <main class="principal" id="vista"></main>
   </div>`;
   const destino = location.hash.slice(1);
-  ir(VISTAS.some(v => v.id === destino && (!v.admin || esAdmin())) ? destino : 'inventario');
+  ir(VISTAS.some(v => v.id === destino && vistaPermitida(v)) ? destino : (S.user.rol === 'supervisor' ? 'conteos' : 'inventario'));
+  actualizarCuentaConteos();
+}
+async function actualizarCuentaConteos() {
+  const el = $('#cuenta-conteos');
+  if (!el) return;
+  try {
+    const n = (await api('/conteos?estado=enviado')).length;
+    el.textContent = n; el.classList.toggle('oculto', !n);
+  } catch {}
 }
 window.addEventListener('hashchange', () => {
   const v = location.hash.slice(1);
-  if (S.user && v && v !== S.vista && VISTAS.some(x => x.id === v)) ir(v);
+  if (S.user && S.user.rol !== 'empleado' && v && v !== S.vista && VISTAS.some(x => x.id === v && vistaPermitida(x))) ir(v);
 });
 
 function ir(v) {
@@ -451,7 +527,7 @@ function ir(v) {
   $$('.nav a').forEach(a => a.classList.toggle('activo', a.dataset.v === v));
   $('#lateral')?.classList.remove('abierto');
   cerrarPopover();
-  const fn = { inventario: vInventario, ordenes: vOrdenes, ajustes: vAjustes, proveedores: vProveedores, sucursales: vSucursales, usuarios: vUsuarios, diagnostico: vDiagnostico, bitacora: vBitacora }[v];
+  const fn = { conteos: vConteos, contar: () => vContar($('#vista')), inventario: vInventario, ordenes: vOrdenes, ajustes: vAjustes, proveedores: vProveedores, sucursales: vSucursales, usuarios: vUsuarios, diagnostico: vDiagnostico, bitacora: vBitacora }[v];
   fn();
 }
 document.addEventListener('click', e => {
@@ -482,7 +558,7 @@ async function vInventario() {
   `<div class="filtros">
      <input type="search" id="f-q" placeholder="Buscar producto o código" value="${esc(S.filtroInv.q)}" aria-label="Buscar producto">
      <select id="f-dep" aria-label="Departamento"><option value="">Todos los departamentos</option></select>
-     ${S.user.rol !== 'sucursal' ? `<div class="chips" role="group" aria-label="Grupo de sucursales">${GRUPOS.map(([k, t]) =>
+     ${!acotado() ? `<div class="chips" role="group" aria-label="Grupo de sucursales">${GRUPOS.map(([k, t]) =>
         `<button class="chip" data-g="${k}" aria-pressed="${S.filtroInv.grupo === k}">${t}</button>`).join('')}</div>` : ''}
      <div class="chips" role="group" aria-label="Vista" style="margin-left:auto">
        <button class="chip" data-m="sucursales" aria-pressed="${S.filtroInv.modo === 'sucursales'}">Por sucursal</button>
@@ -671,18 +747,18 @@ async function vAjustes() {
     $('#aj-cont').innerHTML = (fAj.estado === 'pendiente' ? `<div class="resumen"><div><b>${rows.length}</b><span>Ajustes por capturar en Wansoft</span></div>
       <div><b class="${valor < 0 ? 'dif-neg' : ''}">${dinero(valor)}</b><span>Impacto a costo</span></div>
       <div><b>${rows.filter(r => r.coincide_wansoft).length}</b><span>Wansoft ya coincide</span></div></div>` : '') +
-      `<div class="caja tabla-scroll"><table class="ancho"><thead><tr><th>Folio</th><th>Sucursal</th><th>Producto</th><th class="num">Sistema</th><th class="num">Físico</th><th class="num">Diferencia</th><th class="num">Impacto</th><th>Motivo</th><th>Registró</th><th>Estado</th>${esCompras() ? '<th></th>' : ''}</tr></thead>
+      `<div class="caja tabla-scroll"><table class="ancho"><thead><tr><th>Folio</th><th>Sucursal</th><th>Producto</th><th class="num">Sistema</th><th class="num">Físico</th><th class="num">Diferencia</th><th class="num">Impacto</th><th>Motivo</th><th>Registró</th><th>Estado</th>${puedeCapturarAj() ? '<th></th>' : ''}</tr></thead>
       <tbody>${rows.map(r => `<tr>
         <td style="white-space:nowrap"><b>${esc(r.folio)}</b></td><td>${esc(r.sucursal)}</td>
         <td style="min-width:200px">${esc(r.nombre || r.codigo)}<br><span class="muted">${esc(r.codigo)}</span></td>
         <td class="num">${fmt(r.existencia_sistema)}</td><td class="num">${fmt(r.existencia_fisica)}</td>
         <td class="num ${r.diferencia < 0 ? 'dif-neg' : 'dif-pos'}">${r.diferencia > 0 ? '+' : ''}${fmt(r.diferencia)}</td>
         <td class="num">${r.costo != null ? dinero(r.diferencia * r.costo) : '—'}</td>
-        <td>${esc(r.motivo)}${r.comentario ? `<br><span class="muted">${esc(r.comentario)}</span>` : ''}</td>
-        <td>${esc(r.creado_por_nombre || '')}<br><span class="muted">${fechaHora(r.creado_en)}</span></td>
+        <td style="min-width:210px">${esc(r.motivo)}${r.comentario ? `<br><span class="muted" style="font-size:13px">${esc(r.comentario)}</span>` : ''}</td>
+        <td style="min-width:140px">${esc(r.creado_por_nombre || '')}<br><span class="muted" style="font-size:13px">${fechaHora(r.creado_en)}</span></td>
         <td><span class="est ${r.estado}">${ESTADO_AJ[r.estado]}</span>${r.coincide_wansoft ? '<br><span class="est ok" title="La existencia actual en Wansoft ya es igual al conteo físico">Wansoft ya coincide</span>' : ''}
           ${r.resuelto_por_nombre ? `<br><span class="muted">${esc(r.resuelto_por_nombre)}, ${fechaHora(r.resuelto_en)}</span>` : ''}</td>
-        ${esCompras() ? `<td style="white-space:nowrap">${r.estado === 'pendiente'
+        ${puedeCapturarAj() ? `<td style="white-space:nowrap">${r.estado === 'pendiente'
           ? `<button class="btn mini" data-aj="${r.id}" data-to="capturado">Marcar capturado</button> <button class="btn mini texto" data-aj="${r.id}" data-to="cancelado">Cancelar</button>`
           : `<button class="btn mini texto" data-aj="${r.id}" data-to="pendiente">Regresar a pendiente</button>`}</td>` : ''}
       </tr>`).join('')}</tbody></table></div>`;
@@ -696,7 +772,7 @@ async function vAjustes() {
 
 function editorAjuste(sucId = '', inicial = []) {
   const items = inicial.map(p => ({ ...p, fisica: '' }));
-  const misSucs = S.user.rol === 'sucursal' ? S.user.sucursales : null;
+  const misSucs = acotado() ? S.user.sucursales : null;
   if (!sucId && misSucs?.length === 1) sucId = misSucs[0];
   const panel = abrirPanel(`
     <div class="panel-cab"><div><h2>Nuevo ajuste o conteo</h2><div class="muted">Captura la cantidad física que contaste. La diferencia contra Wansoft se calcula sola.</div></div>${botonCerrar}</div>
@@ -816,7 +892,7 @@ async function cargarOrdenes() {
 
 function editorOrden(oc = null, pre = {}) {
   const base = oc || { sucursal_id: pre.sucursal_id || '', proveedor_id: '', fecha_entrega: '', notas: '', lineas: pre.lineas || [] };
-  const misSucs = S.user.rol === 'sucursal' ? S.user.sucursales : null;
+  const misSucs = acotado() ? S.user.sucursales : null;
   if (!base.sucursal_id && misSucs?.length === 1) base.sucursal_id = misSucs[0];
 
   // Lo que se va a pedir, por código. Lo que ya traía la orden (o el producto elegido desde el inventario) se precarga.
@@ -1167,11 +1243,11 @@ function formSucursal(s = {}) {
 async function vUsuarios() {
   const us = await api('/usuarios');
   const nombreSuc = id => S.sucursales.find(s => s.id === id)?.nombre || id;
-  $('#vista').innerHTML = cabeza('Usuarios', 'Administrador ve y configura todo. Compras ve todas las sucursales y maneja órdenes y ajustes. Sucursal solo ve las sucursales que le asignes.',
+  $('#vista').innerHTML = cabeza('Usuarios', 'Administrador configura todo. Compras maneja órdenes y ajustes de todas las sucursales. Supervisor revisa y aprueba los conteos de sus sucursales. Gerente ve el inventario y hace pedidos de su sucursal. Empleado solo captura conteos desde el teléfono, sin ver lo que dice Wansoft.',
     `<button class="btn primario" id="b-us">Agregar usuario</button>`) +
     `<div class="caja tabla-scroll"><table><thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Sucursales</th><th>Estado</th><th></th></tr></thead>
     <tbody>${us.map(u => `<tr><td><b>${esc(u.nombre)}</b></td><td>${esc(u.usuario)}</td><td>${ROLES[u.rol]}</td>
-      <td>${u.rol === 'sucursal' ? (u.sucursales.length ? esc(u.sucursales.map(nombreSuc).join(', ')) : '<span class="dif-neg">Sin asignar</span>') : '<span class="muted">Todas</span>'}</td>
+      <td>${ROLES_ACOTADOS.includes(u.rol) ? (u.sucursales.length ? esc(u.sucursales.map(nombreSuc).join(', ')) : '<span class="dif-neg">Sin asignar</span>') : '<span class="muted">Todas</span>'}</td>
       <td><span class="est ${u.activo ? 'ok' : 'cancelado'}">${u.activo ? 'Activo' : 'Inactivo'}</span></td>
       <td><button class="btn mini" data-us="${u.id}">Editar</button></td></tr>`).join('')}</tbody></table></div>`;
   $('#b-us').onclick = () => formUsuario();
@@ -1186,18 +1262,20 @@ function formUsuario(u = { rol: 'sucursal', sucursales: [], activo: true }) {
       <label class="campo">Rol<select id="us-r">${Object.entries(ROLES).map(([k, t]) => `<option value="${k}" ${u.rol === k ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
       <fieldset id="us-sucs" style="border:1px solid var(--linea);border-radius:var(--r-s);padding:10px 12px;max-height:260px;overflow:auto">
         <legend style="font-size:13px;color:var(--tinta-2);font-weight:500">Sucursales que puede ver</legend>
-        ${S.sucursales.map(s => `<label style="display:flex;gap:8px;padding:2px 0"><input type="checkbox" value="${s.id}" ${u.sucursales.includes(s.id) ? 'checked' : ''}>${esc(s.nombre)}</label>`).join('')}
+        <label style="display:flex;gap:8px;padding:2px 0 6px;border-bottom:1px solid var(--linea-2);margin-bottom:4px"><input type="checkbox" id="us-todas"><b>Seleccionar todas</b></label>
+        ${S.sucursales.map(s => `<label style="display:flex;gap:8px;padding:2px 0"><input type="checkbox" data-suc value="${s.id}" ${u.sucursales.includes(s.id) ? 'checked' : ''}>${esc(s.nombre)}</label>`).join('')}
       </fieldset>
       ${u.id ? `<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="us-a" ${u.activo ? 'checked' : ''}> Puede entrar</label>` : ''}
     </div>
     <div class="panel-pie"><button class="btn primario" id="us-g">Guardar usuario</button><button class="btn" onclick="cerrarPanel()">Cancelar</button></div>`, { angosto: true });
   const rol = $('#us-r', panel), fs = $('#us-sucs', panel);
-  const toggle = () => fs.classList.toggle('oculto', rol.value !== 'sucursal');
+  const toggle = () => fs.classList.toggle('oculto', !ROLES_ACOTADOS.includes(rol.value));
   rol.onchange = toggle; toggle();
+  $('#us-todas', panel).onchange = e => $$('input[data-suc]', fs).forEach(i => i.checked = e.target.checked);
   $('#us-g', panel).onclick = e => accion(e.currentTarget, async () => {
-    const body = { nombre: $('#us-n', panel).value, rol: rol.value, sucursales: $$('input:checked', fs).map(i => +i.value) };
+    const body = { nombre: $('#us-n', panel).value, rol: rol.value, sucursales: $$('input[data-suc]:checked', fs).map(i => +i.value) };
     const p = $('#us-p', panel).value; if (p) body.password = p;
-    if (rol.value === 'sucursal' && !body.sucursales.length) throw new Error('Asigna al menos una sucursal');
+    if (ROLES_ACOTADOS.includes(rol.value) && !body.sucursales.length) throw new Error('Asigna al menos una sucursal');
     if (u.id) await api(`/usuarios/${u.id}`, { method: 'PUT', body: { ...body, activo: $('#us-a', panel).checked } });
     else await api('/usuarios', { method: 'POST', body: { ...body, usuario: $('#us-u', panel).value } });
     cerrarPanel(); toast('Usuario guardado'); vUsuarios();
@@ -1287,6 +1365,410 @@ function detalleBitacora(d) {
   if (d.estado) return ESTADO_AJ[d.estado] || d.estado;
   return '';
 }
+
+
+// ════════════════════════════════════════════════════════════════
+//  Conteos: app del teléfono (empleado) y revisión (supervisor)
+// ════════════════════════════════════════════════════════════════
+const LS = {
+  get(k, d = null) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} },
+};
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+const ESTADO_CT = { enviado: 'Por revisar', devuelto: 'Recontar', aprobado: 'Aprobado', cancelado: 'Cancelado' };
+const CLASE_CT = { enviado: 'enviada', devuelto: 'pendiente', aprobado: 'recibida', cancelado: 'cancelada' };
+const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const normTxt = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+// ── Envíos pendientes (si no hay señal se guardan en el teléfono) ──
+const outboxKey = () => `mz_outbox_${S.user?.id}`;
+function pendientesEnvio() { return LS.get(outboxKey(), []); }
+let enviando = false;
+async function enviarPendientes() {
+  if (enviando || !S.user) return;
+  const cola = pendientesEnvio();
+  if (!cola.length) return;
+  enviando = true;
+  const resto = [];
+  let enviados = 0;
+  for (const item of cola) {
+    try {
+      if (item.tipo === 'recontar') await api(`/conteos/${item.id}/recontar`, { method: 'POST', body: item.body });
+      else await api('/conteos', { method: 'POST', body: item.body });
+      enviados++;
+    } catch (e) {
+      if (e instanceof TypeError || !navigator.onLine) { resto.push(item); continue; }
+      // El servidor lo rechazó: se regresa como borrador para corregirlo
+      LS.set(item.borrador, { valores: Object.fromEntries(item.body.lineas.map(l => [l.codigo, String(l.cantidad)])), inicio: item.body.contado_en });
+      toast(`No se pudo enviar "${item.body.nombre || 'conteo'}": ${e.message}`, 'error');
+    }
+  }
+  LS.set(outboxKey(), resto);
+  enviando = false;
+  if (enviados) {
+    toast(enviados === 1 ? 'Conteo enviado' : `${enviados} conteos enviados`);
+    if (S.vista === 'contar' && !$('.contando')) vContar(S.contarCont);
+  }
+}
+window.addEventListener('online', enviarPendientes);
+setInterval(enviarPendientes, 30000);
+
+// ── Instalar como app ──────────────────────────────────────────────
+let promptInstalar = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); promptInstalar = e; if (S.vista === 'contar' && S.contarCont && !$('.contando')) vContar(S.contarCont); });
+const esInstalada = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+function bannerInstalar() {
+  if (esInstalada() || LS.get('mz_no_instalar')) return '';
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (!promptInstalar && !ios) return '';
+  return `<div class="banner-instalar" id="banner-inst"><span>${ios
+    ? 'Para usarla como app: toca <b>Compartir</b> y luego <b>Agregar a pantalla de inicio</b>.'
+    : 'Instala esta app en tu teléfono para abrirla más rápido.'}</span>
+    ${promptInstalar ? '<button class="btn primario mini" id="b-inst">Instalar</button>' : ''}
+    <button class="btn texto mini" id="b-no-inst" aria-label="No mostrar otra vez">Ocultar</button></div>`;
+}
+
+function pintarAppEmpleado() {
+  S.vista = 'contar';
+  $('#raiz').innerHTML = `<div class="movil">
+    <header class="movil-cab">${logo(28)}<div><b>Conteos</b><span>${esc(S.user.nombre)}</span></div>
+      <button class="btn mini" onclick="salir()">Salir</button></header>
+    <main class="movil-cuerpo" id="vista"></main></div>`;
+  vContar($('#vista'));
+}
+
+// ── Pantalla principal de conteo ───────────────────────────────────
+async function vContar(cont) {
+  S.contarCont = cont;
+  enviarPendientes();
+  let datos, mios = [];
+  try {
+    [datos, mios] = await Promise.all([api('/conteos/hoy'), api('/conteos').catch(() => [])]);
+    LS.set(`mz_hoy_${S.user.id}`, datos);
+  } catch (e) {
+    datos = LS.get(`mz_hoy_${S.user.id}`);
+    if (!datos) { cont.innerHTML = `<div class="aviso error">${esc(e.message)}</div>`; return; }
+  }
+  const sucs = datos.sucursales;
+  if (!sucs.length) { cont.innerHTML = `<div class="caja vacio"><b>No tienes sucursal asignada</b>Pide a tu supervisor que te asigne una.</div>`; return; }
+  let suc = LS.get(`mz_suc_${S.user.id}`);
+  if (!sucs.some(s => s.id === suc)) suc = sucs[0].id;
+  const sucNombre = sucs.find(s => s.id === suc).nombre;
+  const tareas = datos.tareas.filter(t => t.sucursal_id === suc);
+  if (S.user.rol !== 'empleado') mios = mios.filter(c => c.creado_por_nombre === S.user.nombre);
+  const devueltos = mios.filter(c => c.estado === 'devuelto');
+  const cola = pendientesEnvio();
+  const borradores = Object.keys(localStorage).filter(k => k.startsWith(`mz_borrador_${S.user.id}_${suc}_`));
+  const enMovil = S.user.rol === 'empleado';
+
+  cont.innerHTML = `
+    ${enMovil ? '' : cabeza('Capturar conteo', 'Cuenta a ciegas, igual que lo hacen los empleados desde el teléfono. Tu supervisor revisa las diferencias.')}
+    ${bannerInstalar()}
+    ${cola.length ? `<div class="pendientes-envio"><span class="carga"></span> ${cola.length === 1 ? 'Un conteo guardado en este teléfono se enviará' : cola.length + ' conteos guardados en este teléfono se enviarán'} cuando haya señal.</div>` : ''}
+    ${sucs.length > 1 ? `<label class="campo">Sucursal<select id="ct-suc">${sucs.map(s => `<option value="${s.id}" ${s.id === suc ? 'selected' : ''}>${esc(s.nombre)}</option>`).join('')}</select></label>`
+      : `<div><span class="muted">Sucursal</span><h2>${esc(sucNombre)}</h2></div>`}
+    ${devueltos.length ? `<section><h2 style="margin-bottom:8px">Para recontar</h2><div class="lista-tareas">${devueltos.map(c => `
+      <button class="tarea" data-rec="${c.id}"><div><b>${esc(c.nombre || 'Conteo')} · ${esc(c.folio)}</b>
+        <span class="muted">${c.por_recontar} producto${c.por_recontar === 1 ? '' : 's'} por recontar${c.comentario ? ' · ' + esc(c.comentario) : ''}</span></div>
+        <span class="est pendiente">Recontar</span></button>`).join('')}</div></section>` : ''}
+    <section><h2 style="margin-bottom:8px">Hoy te toca</h2><div class="lista-tareas">
+      ${tareas.length ? tareas.map(t => {
+        const bor = LS.get(`mz_borrador_${S.user.id}_${suc}_${t.programa_id}`);
+        return `<button class="tarea ${t.hecho ? 'hecha' : ''}" data-prog="${t.programa_id}"><div><b>${esc(t.nombre)}</b>
+          <span class="muted">${t.departamentos.length ? esc(t.departamentos.join(', ')) : 'Todos los productos'}</span></div>
+          ${t.hecho ? '<span class="est recibida">Enviado</span>' : bor ? '<span class="est pendiente">A medias</span>' : '<span class="est enviada">Pendiente</span>'}</button>`;
+      }).join('') : '<div class="muted">No hay conteos programados para hoy.</div>'}
+      <button class="tarea" data-prog="libre"><div><b>Conteo libre</b><span class="muted">Elige qué productos contar</span></div>
+        ${borradores.some(k => k.endsWith('_libre')) ? '<span class="est pendiente">A medias</span>' : ''}</button>
+    </div></section>
+    ${mios.filter(c => c.estado !== 'devuelto').length ? `<section><h2 style="margin-bottom:8px">Mis conteos recientes</h2><div class="caja">
+      <table><tbody>${mios.filter(c => c.estado !== 'devuelto').slice(0, 8).map(c => `<tr><td><b>${esc(c.nombre || 'Conteo')}</b><br><span class="muted">${esc(c.folio)} · ${fechaHora(c.enviado_en)}</span></td>
+        <td class="num"><span class="est ${CLASE_CT[c.estado]}">${ESTADO_CT[c.estado]}</span></td></tr>`).join('')}</tbody></table></div></section>` : ''}`;
+
+  $('#ct-suc', cont)?.addEventListener('change', e => { LS.set(`mz_suc_${S.user.id}`, +e.target.value); vContar(cont); });
+  $('#b-inst', cont)?.addEventListener('click', async () => { await promptInstalar.prompt(); promptInstalar = null; $('#banner-inst')?.remove(); });
+  $('#b-no-inst', cont)?.addEventListener('click', () => { LS.set('mz_no_instalar', true); $('#banner-inst')?.remove(); });
+  $$('[data-prog]', cont).forEach(b => b.onclick = () => {
+    const t = tareas.find(x => String(x.programa_id) === b.dataset.prog);
+    if (t?.hecho && !confirm('Este conteo ya se envió hoy. ¿Quieres hacerlo de nuevo?')) return;
+    iniciarConteo({ sucursal_id: suc, sucursal: sucNombre, programa_id: t?.programa_id || null, nombre: t?.nombre || 'Conteo libre', departamentos: t?.departamentos || [] });
+  });
+  $$('[data-rec]', cont).forEach(b => b.onclick = async () => {
+    try {
+      const c = await api('/conteos/' + b.dataset.rec);
+      iniciarConteo({ sucursal_id: c.sucursal_id, sucursal: c.sucursal, nombre: `Recontar ${c.folio}`, recontar: c });
+    } catch (e) { toast(e.message, 'error'); }
+  });
+}
+
+// ── Sesión de conteo a pantalla completa ───────────────────────────
+async function iniciarConteo(cfg) {
+  const claveBorrador = `mz_borrador_${S.user.id}_${cfg.sucursal_id}_${cfg.recontar ? 'rec' + cfg.recontar.id : (cfg.programa_id || 'libre')}`;
+  let productos;
+  if (cfg.recontar) {
+    productos = cfg.recontar.lineas.filter(l => l.recontar).map(l => ({ codigo: l.codigo, nombre: l.nombre, unidad: l.unidad, departamento: l.departamento || 'Sin departamento' }));
+  } else {
+    try {
+      productos = await api(`/conteos/productos/${cfg.sucursal_id}`);
+      LS.set(`mz_prod_${cfg.sucursal_id}`, productos);
+    } catch (e) {
+      productos = LS.get(`mz_prod_${cfg.sucursal_id}`);
+      if (!productos) return toast('Sin señal y sin lista de productos guardada. Intenta con señal.', 'error');
+    }
+    if (cfg.departamentos?.length) productos = productos.filter(p => cfg.departamentos.includes(p.departamento));
+  }
+  if (!productos.length) return toast('No hay productos para contar en esta sucursal', 'error');
+
+  const borrador = LS.get(claveBorrador) || {};
+  const valores = new Map(Object.entries(borrador.valores || {}));
+  const inicio = borrador.inicio || new Date().toISOString();
+  const deps = [...new Set(productos.map(p => p.departamento))];
+  const vista = { dep: '', q: '' };
+
+  const ov = document.createElement('div');
+  ov.className = 'contando';
+  ov.setAttribute('role', 'dialog');
+  ov.setAttribute('aria-label', cfg.nombre);
+  ov.innerHTML = `
+    <div class="contando-cab"><div class="fila">
+      <div><h2>${esc(cfg.nombre)}</h2><span class="muted" id="ct-av-txt"></span></div>
+      <button class="btn mini" id="ct-salir" style="margin-left:auto">Guardar y salir</button></div>
+      <div class="avance" aria-hidden="true"><i id="ct-av"></i></div></div>
+    ${deps.length > 1 ? `<div class="contando-filtros" role="group" aria-label="Departamento">
+      <button class="chip" data-dep="" aria-pressed="true">Todos</button>
+      <button class="chip" data-dep="__faltan" aria-pressed="false">Sin contar</button>
+      ${deps.map(d => `<button class="chip" data-dep="${esc(d)}" aria-pressed="false">${esc(d)}</button>`).join('')}</div>` : ''}
+    ${productos.length > 8 ? `<div class="contando-buscar"><input type="search" id="ct-q" placeholder="Buscar producto" aria-label="Buscar producto"></div>` : ''}
+    <div class="contando-lista" id="ct-lista"></div>
+    <div class="contando-pie"><span class="muted" id="ct-pie-txt"></span><button class="btn primario" id="ct-enviar">Enviar conteo</button></div>`;
+  document.body.appendChild(ov);
+  document.body.style.overflow = 'hidden';
+
+  let tGuardar;
+  const guardarBorrador = () => {
+    clearTimeout(tGuardar);
+    tGuardar = setTimeout(() => {
+      const v = Object.fromEntries([...valores].filter(([, x]) => x !== ''));
+      if (Object.keys(v).length) LS.set(claveBorrador, { valores: v, inicio }); else LS.del(claveBorrador);
+    }, 300);
+  };
+  const contados = () => productos.filter(p => (valores.get(p.codigo) ?? '') !== '').length;
+  const avance = () => {
+    const n = contados();
+    $('#ct-av', ov).style.width = `${Math.round(100 * n / productos.length)}%`;
+    $('#ct-av-txt', ov).textContent = `${cfg.sucursal} · ${n} de ${productos.length} contados`;
+    $('#ct-pie-txt', ov).textContent = n < productos.length ? `Faltan ${productos.length - n}` : 'Todo contado';
+  };
+  const pintar = () => {
+    const q = normTxt(vista.q);
+    const lista = productos.filter(p =>
+      (!vista.dep || (vista.dep === '__faltan' ? (valores.get(p.codigo) ?? '') === '' : p.departamento === vista.dep)) &&
+      (!q || normTxt(p.nombre).includes(q) || normTxt(p.codigo).includes(q)));
+    let dep = null, html = '';
+    for (const p of lista) {
+      if (p.departamento !== dep && deps.length > 1) { dep = p.departamento; html += `<div class="dep-titulo">${esc(dep)}</div>`; }
+      const v = valores.get(p.codigo) ?? '';
+      html += `<label class="prod ${cfg.recontar ? 'recontar' : ''} ${v !== '' ? 'contado' : ''}">
+        <span class="info"><b>${esc(p.nombre || p.codigo)}</b><span>${esc(p.unidad || '')} · ${esc(p.codigo)}</span></span>
+        <input type="number" inputmode="decimal" min="0" step="any" enterkeyhint="next" data-c="${esc(p.codigo)}" value="${esc(v)}" placeholder="—" aria-label="Cantidad de ${esc(p.nombre)} en ${esc(p.unidad || 'unidades')}"></label>`;
+    }
+    $('#ct-lista', ov).innerHTML = html || `<div class="vacio">${vista.dep === '__faltan' ? 'Ya contaste todo.' : 'Ningún producto coincide.'}</div>`;
+    const inputs = $$('input[data-c]', ov);
+    inputs.forEach((inp, i) => {
+      inp.addEventListener('input', () => {
+        valores.set(inp.dataset.c, inp.value.trim());
+        inp.closest('.prod').classList.toggle('contado', inp.value.trim() !== '');
+        avance(); guardarBorrador();
+      });
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); const sig = inputs[i + 1]; if (sig) { sig.focus(); sig.select(); } else inp.blur(); }
+      });
+    });
+    avance();
+  };
+  const cerrar = () => { clearTimeout(tGuardar); ov.remove(); document.body.style.overflow = ''; };
+
+  $$('[data-dep]', ov).forEach(b => b.onclick = () => { vista.dep = b.dataset.dep; $$('[data-dep]', ov).forEach(x => x.setAttribute('aria-pressed', x === b)); pintar(); $('#ct-lista', ov).scrollTop = 0; });
+  let tq; $('#ct-q', ov)?.addEventListener('input', e => { clearTimeout(tq); tq = setTimeout(() => { vista.q = e.target.value; pintar(); }, 150); });
+  $('#ct-salir', ov).onclick = () => {
+    const v = Object.fromEntries([...valores].filter(([, x]) => x !== ''));
+    if (Object.keys(v).length) LS.set(claveBorrador, { valores: v, inicio }); else LS.del(claveBorrador);
+    cerrar(); if (Object.keys(v).length) toast('Guardado. Puedes continuar después.'); vContar(S.contarCont);
+  };
+  $('#ct-enviar', ov).onclick = () => {
+    const lineas = productos.filter(p => (valores.get(p.codigo) ?? '') !== '').map(p => ({ codigo: p.codigo, cantidad: Number(valores.get(p.codigo)) }));
+    if (lineas.some(l => !Number.isFinite(l.cantidad) || l.cantidad < 0)) return toast('Revisa las cantidades: solo números mayores o iguales a cero', 'error');
+    if (!lineas.length) return toast('Captura al menos un producto', 'error');
+    const faltan = productos.length - lineas.length;
+    if (cfg.recontar && faltan) return toast(`Te falta recontar ${faltan} producto${faltan === 1 ? '' : 's'}`, 'error');
+    if (faltan && !confirm(`Contaste ${lineas.length} de ${productos.length}. Los ${faltan} que no contaste no se revisarán. ¿Enviar así?`)) return;
+    const item = cfg.recontar
+      ? { tipo: 'recontar', id: cfg.recontar.id, body: { lineas }, borrador: claveBorrador }
+      : { tipo: 'conteo', borrador: claveBorrador, body: { sucursal_id: cfg.sucursal_id, programa_id: cfg.programa_id, nombre: cfg.nombre, cliente_id: uuid(), contado_en: inicio, lineas } };
+    LS.set(outboxKey(), [...pendientesEnvio(), item]);
+    LS.del(claveBorrador);
+    cerrar();
+    if (!navigator.onLine) toast('Sin señal: el conteo quedó guardado y se enviará solo');
+    enviarPendientes().then(() => vContar(S.contarCont));
+  };
+  pintar();
+  setTimeout(() => $('input[data-c]', ov)?.focus(), 50);
+}
+
+// ── Revisión de conteos (supervisor) ───────────────────────────────
+const fCT = { estado: 'enviado' };
+async function vConteos() {
+  $('#vista').innerHTML = cabeza('Conteos', 'Conteos que capturan los empleados desde el teléfono, sin ver lo que dice Wansoft. Revisa las diferencias, devuelve lo que haya que recontar y aprueba para generar los ajustes.',
+    `${esRevisor() ? '<button class="btn" id="b-progs">Conteos programados</button>' : ''}`) +
+    `<div class="filtros"><div class="chips" role="group" aria-label="Estado">${[['enviado', 'Por revisar'], ['devuelto', 'En recuento'], ['aprobado', 'Aprobados'], ['', 'Todos']].map(([k, t]) =>
+      `<button class="chip" data-e="${k}" aria-pressed="${fCT.estado === k}">${t}</button>`).join('')}</div></div>
+    <div id="ct-cont"><div class="vacio"><span class="carga"></span></div></div>`;
+  $$('[data-e]').forEach(b => b.onclick = () => { fCT.estado = b.dataset.e; vConteos(); });
+  $('#b-progs')?.addEventListener('click', vProgramas);
+  try {
+    const rows = await api('/conteos' + (fCT.estado ? '?estado=' + fCT.estado : ''));
+    actualizarCuentaConteos();
+    if (!rows.length) {
+      $('#ct-cont').innerHTML = `<div class="caja vacio"><b>${fCT.estado === 'enviado' ? 'No hay conteos por revisar' : 'Sin conteos'}</b>Los empleados capturan conteos desde el teléfono con un usuario de tipo Empleado.${esAdmin() ? ' Créalos en Usuarios.' : ''}</div>`;
+      return;
+    }
+    $('#ct-cont').innerHTML = `<div class="caja tabla-scroll"><table><thead><tr><th>Folio</th><th>Sucursal</th><th>Conteo</th><th>Contó</th><th>Enviado</th><th class="num">Productos</th><th class="num">Con diferencia</th><th class="num">Impacto a costo</th><th>Estado</th></tr></thead>
+      <tbody>${rows.map(c => `<tr class="clic" data-ct="${c.id}" tabindex="0"><td><b>${esc(c.folio)}</b></td><td>${esc(c.sucursal)}</td><td>${esc(c.nombre || '')}</td>
+        <td>${esc(c.creado_por_nombre || '')}</td><td>${fechaHora(c.enviado_en)}</td><td class="num">${c.productos}</td>
+        <td class="num">${c.con_diferencia || '—'}</td><td class="num ${c.impacto < 0 ? 'dif-neg' : ''}">${c.con_diferencia ? dinero(c.impacto) : '—'}</td>
+        <td><span class="est ${CLASE_CT[c.estado]}">${ESTADO_CT[c.estado]}</span></td></tr>`).join('')}</tbody></table></div>`;
+    $$('[data-ct]').forEach(tr => { tr.onclick = () => detalleConteo(tr.dataset.ct); tr.onkeydown = e => { if (e.key === 'Enter') detalleConteo(tr.dataset.ct); }; });
+  } catch (e) { $('#ct-cont').innerHTML = `<div class="aviso error">${esc(e.message)}</div>`; }
+}
+
+async function detalleConteo(id) {
+  let c;
+  try { c = await api('/conteos/' + id); } catch (e) { return toast(e.message, 'error'); }
+  const revisable = c.estado === 'enviado' && esRevisor();
+  const ls = c.lineas.map(l => {
+    const sis = Number(l.existencia_sistema || 0), dif = Number(l.cantidad) - sis;
+    return { ...l, sis, dif, imp: dif * Number(l.costo || 0) };
+  }).sort((a, b) => Math.abs(b.imp) - Math.abs(a.imp) || Math.abs(b.dif) - Math.abs(a.dif));
+  const conDif = ls.filter(l => Math.abs(l.dif) > 0.0001);
+  const impacto = conDif.reduce((a, l) => a + l.imp, 0);
+  let soloDif = conDif.length > 0;
+
+  const panel = abrirPanel(`
+    <div class="panel-cab"><div><h2>${esc(c.folio)} <span class="est ${CLASE_CT[c.estado]}" style="vertical-align:3px">${ESTADO_CT[c.estado]}</span></h2>
+      <div class="muted">${esc(c.sucursal)} · ${esc(c.nombre || 'Conteo')}</div></div>${botonCerrar}</div>
+    <div class="panel-cuerpo">
+      <div class="resumen" style="margin:0">
+        <div><b>${ls.length}</b><span>Productos contados</span></div>
+        <div><b>${conDif.length}</b><span>Con diferencia</span></div>
+        <div><b class="${impacto < 0 ? 'dif-neg' : ''}">${dinero(impacto)}</b><span>Impacto a costo</span></div>
+      </div>
+      <div class="rejilla">
+        <div><span class="muted">Contó</span><br>${esc(c.creado_por_nombre || '—')}</div>
+        <div><span class="muted">Enviado</span><br>${fechaHora(c.enviado_en)}</div>
+        <div><span class="muted">Comparado contra Wansoft de</span><br>${fechaHora(c.sistema_en)}</div>
+        ${c.revisado_por_nombre ? `<div><span class="muted">Revisó</span><br>${esc(c.revisado_por_nombre)}, ${fechaHora(c.revisado_en)}</div>` : ''}
+      </div>
+      ${c.comentario ? `<div class="aviso">${esc(c.comentario)}</div>` : ''}
+      ${revisable ? `<div class="aviso alerta">Revisa las diferencias grandes. Si algo no cuadra, márcalo y devuélvelo para que lo vuelvan a contar. Al aprobar, cada diferencia se convierte en un ajuste pendiente de capturar en Wansoft.</div>` : ''}
+      <div class="chips" role="group" aria-label="Mostrar"><button class="chip" data-v="dif" aria-pressed="${soloDif}">Con diferencia (${conDif.length})</button><button class="chip" data-v="todo" aria-pressed="${!soloDif}">Todos (${ls.length})</button></div>
+      <div class="caja tabla-scroll" id="ct-lineas"></div>
+      <div><h3 style="margin-bottom:10px">Historial</h3><ul class="historial">${c.eventos.map(e => `<li>${esc({ enviado: 'Enviado', recontado: 'Recontado', devuelto: 'Devuelto para recontar', aprobado: 'Aprobado', cancelado: 'Cancelado' }[e.tipo] || e.tipo)}${e.detalle ? ': ' + esc(e.detalle) : ''}<small>${fechaHora(e.creado_en)}${e.usuario ? ' · ' + esc(e.usuario) : ''}</small></li>`).join('')}</ul></div>
+    </div>
+    ${revisable ? `<div class="panel-pie">
+      <button class="btn primario" id="ct-aprobar">${conDif.length ? `Aprobar y generar ${conDif.length} ajuste${conDif.length === 1 ? '' : 's'}` : 'Aprobar (sin diferencias)'}</button>
+      <button class="btn" id="ct-devolver">Devolver para recontar</button>
+      <button class="btn peligro" id="ct-cancelar" style="margin-left:auto">Cancelar conteo</button></div>` : ''}`);
+
+  const marcados = new Set();
+  const pintar = () => {
+    const filas = soloDif ? conDif : ls;
+    $('#ct-lineas', panel).innerHTML = filas.length ? `<table><thead><tr>${revisable ? '<th class="chk"><span class="oculto">Recontar</span></th>' : ''}<th>Producto</th><th class="num">Wansoft</th><th class="num">Contado</th><th class="num">Diferencia</th><th class="num">Impacto</th></tr></thead>
+      <tbody>${filas.map(l => `<tr class="${l.recontar ? 'dif-fila' : ''}">
+        ${revisable ? `<td class="chk"><input type="checkbox" data-r="${esc(l.codigo)}" ${marcados.has(l.codigo) ? 'checked' : ''} aria-label="Pedir recontar ${esc(l.nombre)}"></td>` : ''}
+        <td><b>${esc(l.nombre || l.codigo)}</b><br><span class="muted">${esc(l.codigo)} · ${esc(l.unidad || '')}${l.recontar ? ' · por recontar' : ''}</span></td>
+        <td class="num">${fmt(l.sis)}</td><td class="num"><b>${fmt(l.cantidad)}</b></td>
+        <td class="num ${l.dif < 0 ? 'dif-neg' : l.dif > 0 ? 'dif-pos' : ''}">${Math.abs(l.dif) < 0.0001 ? '—' : (l.dif > 0 ? '+' : '') + fmt(l.dif)}</td>
+        <td class="num">${Math.abs(l.dif) < 0.0001 || !l.costo ? '—' : dinero(l.imp)}</td></tr>`).join('')}</tbody></table>`
+      : `<div class="vacio">Todo coincide con Wansoft.</div>`;
+    $$('[data-r]', panel).forEach(cb => cb.onchange = () => { cb.checked ? marcados.add(cb.dataset.r) : marcados.delete(cb.dataset.r); });
+  };
+  $$('[data-v]', panel).forEach(b => b.onclick = () => { soloDif = b.dataset.v === 'dif'; $$('[data-v]', panel).forEach(x => x.setAttribute('aria-pressed', x === b)); pintar(); });
+  pintar();
+  const recargar = () => { detalleConteo(id); if (S.vista === 'conteos') vConteos(); };
+  $('#ct-aprobar', panel)?.addEventListener('click', e => accion(e.currentTarget, async () => {
+    if (marcados.size && !confirm('Marcaste productos para recontar. ¿Aprobar de todos modos sin recontarlos?')) return;
+    const r = await api(`/conteos/${id}/aprobar`, { method: 'POST', body: {} });
+    toast(r.ajustes.length ? `Aprobado: ${r.ajustes.length} ajuste${r.ajustes.length === 1 ? '' : 's'} pendiente${r.ajustes.length === 1 ? '' : 's'} de capturar en Wansoft` : 'Aprobado sin diferencias');
+    recargar();
+  }));
+  $('#ct-devolver', panel)?.addEventListener('click', e => {
+    if (!marcados.size) return toast('Marca en la tabla los productos que deben recontar', 'error');
+    const comentario = prompt(`Se pedirá recontar ${marcados.size} producto${marcados.size === 1 ? '' : 's'}. ¿Alguna indicación para el empleado?`, '');
+    if (comentario === null) return;
+    accion(e.currentTarget, async () => {
+      await api(`/conteos/${id}/devolver`, { method: 'POST', body: { codigos: [...marcados], comentario } });
+      toast('Devuelto para recontar'); recargar();
+    });
+  });
+  $('#ct-cancelar', panel)?.addEventListener('click', e => {
+    const comentario = prompt('¿Por qué se cancela este conteo?');
+    if (comentario === null) return;
+    accion(e.currentTarget, async () => { await api(`/conteos/${id}/cancelar`, { method: 'POST', body: { comentario } }); toast('Conteo cancelado'); recargar(); });
+  });
+}
+
+// ── Conteos programados (cíclicos) ─────────────────────────────────
+async function vProgramas() {
+  let progs, deps;
+  try { [progs, deps] = await Promise.all([api('/conteos/programas'), api('/conteos/departamentos')]); } catch (e) { return toast(e.message, 'error'); }
+  const nombreSuc = id => S.sucursales.find(s => s.id === id)?.nombre || id;
+  const panel = abrirPanel(`
+    <div class="panel-cab"><div><h2>Conteos programados</h2><div class="muted">Le dicen a cada sucursal qué contar cada día. Ej.: lácteos y carnes diario, abarrotes los lunes.</div></div>${botonCerrar}</div>
+    <div class="panel-cuerpo">
+      ${progs.length ? `<div class="caja"><table><thead><tr><th>Conteo</th><th>Qué se cuenta</th><th>Días</th><th>Sucursales</th><th></th></tr></thead><tbody>
+        ${progs.map(p => `<tr${p.activo ? '' : ' style="opacity:.55"'}><td><b>${esc(p.nombre)}</b>${p.activo ? '' : '<br><span class="muted">Pausado</span>'}</td>
+          <td>${p.departamentos.length ? esc(p.departamentos.join(', ')) : 'Todo'}</td>
+          <td>${p.dias.length ? p.dias.map(d => DIAS[d]).join(', ') : 'Diario'}</td>
+          <td>${p.sucursales.length ? esc(p.sucursales.map(nombreSuc).join(', ')) : 'Todas'}</td>
+          <td><button class="btn mini" data-pg="${p.id}">Editar</button></td></tr>`).join('')}</tbody></table></div>`
+        : '<div class="caja vacio"><b>Sin conteos programados</b>Sin programa, los empleados solo pueden hacer conteos libres.</div>'}
+    </div>
+    <div class="panel-pie"><button class="btn primario" id="pg-nuevo">Programar conteo</button></div>`);
+  $('#pg-nuevo', panel).onclick = () => formPrograma({}, deps);
+  $$('[data-pg]', panel).forEach(b => b.onclick = () => formPrograma(progs.find(p => p.id === +b.dataset.pg), deps));
+}
+function formPrograma(p, deps) {
+  p = { nombre: '', departamentos: [], dias: [], sucursales: [], activo: true, ...p };
+  const caja = 'border:1px solid var(--linea);border-radius:var(--r-s);padding:10px 12px;max-height:200px;overflow:auto';
+  const panel = abrirPanel(`
+    <div class="panel-cab"><h2>${p.id ? 'Editar conteo programado' : 'Programar conteo'}</h2>${botonCerrar}</div>
+    <div class="panel-cuerpo">
+      <label class="campo">Nombre que verá el empleado<input type="text" id="pg-n" value="${esc(p.nombre)}" placeholder="Ej. Lácteos y carnes"></label>
+      <fieldset style="${caja}"><legend style="font-size:13px;color:var(--tinta-2);font-weight:500">Departamentos a contar (ninguno marcado = todo)</legend>
+        ${deps.map(d => `<label style="display:flex;gap:8px;padding:2px 0"><input type="checkbox" data-pd value="${esc(d)}" ${p.departamentos.includes(d) ? 'checked' : ''}>${esc(d)}</label>`).join('') || '<span class="muted">Actualiza una sucursal para traer los departamentos.</span>'}</fieldset>
+      <fieldset style="${caja}"><legend style="font-size:13px;color:var(--tinta-2);font-weight:500">Días (ninguno marcado = diario)</legend>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">${DIAS.map((d, i) => `<label style="display:flex;gap:6px"><input type="checkbox" data-pdia value="${i}" ${p.dias.includes(i) ? 'checked' : ''}>${d}</label>`).join('')}</div></fieldset>
+      <fieldset style="${caja}"><legend style="font-size:13px;color:var(--tinta-2);font-weight:500">Sucursales (ninguna marcada = todas)</legend>
+        ${S.sucursales.filter(s => s.activa).map(s => `<label style="display:flex;gap:8px;padding:2px 0"><input type="checkbox" data-ps value="${s.id}" ${p.sucursales.includes(s.id) ? 'checked' : ''}>${esc(s.nombre)}</label>`).join('')}</fieldset>
+      ${p.id ? `<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="pg-a" ${p.activo ? 'checked' : ''}> Activo</label>` : ''}
+    </div>
+    <div class="panel-pie"><button class="btn primario" id="pg-g">Guardar</button><button class="btn" id="pg-volver">Volver</button></div>`, { angosto: true });
+  $('#pg-volver', panel).onclick = vProgramas;
+  $('#pg-g', panel).onclick = e => accion(e.currentTarget, async () => {
+    const body = {
+      nombre: $('#pg-n', panel).value,
+      departamentos: $$('[data-pd]:checked', panel).map(i => i.value),
+      dias: $$('[data-pdia]:checked', panel).map(i => +i.value),
+      sucursales: $$('[data-ps]:checked', panel).map(i => +i.value),
+    };
+    if (p.id) await api(`/conteos/programas/${p.id}`, { method: 'PUT', body: { ...body, activo: $('#pg-a', panel).checked } });
+    else await api('/conteos/programas', { method: 'POST', body });
+    toast('Conteo programado guardado'); vProgramas();
+  });
+}
+
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
 
 iniciar();
 </script>

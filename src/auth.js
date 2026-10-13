@@ -44,13 +44,14 @@ const requireRol = (...roles) => (req, res, next) =>
   roles.includes(req.user.rol) ? next() : res.status(403).json({ error: 'No tienes permiso para esta acción' });
 
 // ¿Puede el usuario ver/operar esta sucursal?
+const ROLES_ACOTADOS = ['sucursal', 'supervisor', 'empleado'];
 function puedeSucursal(user, sucursalId) {
-  if (user.rol !== 'sucursal') return true;
+  if (!ROLES_ACOTADOS.includes(user.rol)) return true;
   return (user.sucursales || []).includes(Number(sucursalId));
 }
 // Filtro SQL para listar solo sus sucursales: devuelve null si ve todas
 function sucursalesPermitidas(user) {
-  return user.rol === 'sucursal' ? (user.sucursales || []) : null;
+  return ROLES_ACOTADOS.includes(user.rol) ? (user.sucursales || []) : null;
 }
 
 const router = express.Router();

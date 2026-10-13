@@ -9,6 +9,7 @@ Portal para ver el inventario de todas las sucursales de Wansoft en una sola pan
 - **Órdenes de compra rastreables**: folio (`OC-00001`), estado (borrador → enviada → recibida parcial → recibida), historial de quién hizo qué, impresión, recepción manual y **confirmación contra Wansoft**: busca las entradas de compra (`GetInputInventory_Xml`, tipos 1 *Factura* y 13 *Orden de compra a proveedor*) desde que se envió la orden y las propone para aplicar, sin contar dos veces la misma entrada.
 - **Usuarios y permisos**: Administrador, Compras y Sucursal (solo ve sus sucursales).
 - **Diagnóstico de Wansoft**: consulta en vivo para ver qué columnas devuelve Wansoft y ajustar cuál es el código, la existencia, etc.
+- **Conteos desde el teléfono**: los empleados (rol Empleado) instalan el portal como app y cuentan a ciegas, por departamento, con o sin señal. El supervisor revisa diferencias, devuelve productos para recontar y al aprobar se generan los ajustes. Conteos programados por día y departamento.
 - **Bitácora** de todas las acciones.
 
 ## Cómo se instala (Railway + Supabase)

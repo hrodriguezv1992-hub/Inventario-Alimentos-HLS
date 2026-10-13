@@ -195,6 +195,7 @@ async function inventario(suc) {
   }
   // Si Wansoft manda el valor total (Monto) y no el costo, costo = valor / existencia
   for (const f of porCodigo.values()) {
+    f.existencia = Math.round(f.existencia * 10000) / 10000;
     if ((f.costo == null || f.costo === 0) && m.valor && f.existencia > 0) {
       f.costo = Math.round((f.valor / f.existencia) * 10000) / 10000;
     }

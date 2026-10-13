@@ -68,7 +68,7 @@ r.post('/', async (req, res) => {
 });
 
 // Marcar como capturado en Wansoft o cancelar
-r.patch('/:id', requireRol('admin', 'compras'), async (req, res) => {
+r.patch('/:id', requireRol('admin', 'compras', 'supervisor'), async (req, res) => {
   const estado = req.body.estado;
   if (!['capturado', 'cancelado', 'pendiente'].includes(estado)) return res.status(400).json({ error: 'Estado no válido' });
   const { rowCount } = await pool.query(`
