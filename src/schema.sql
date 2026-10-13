@@ -36,6 +36,17 @@ CREATE TABLE IF NOT EXISTS inventario (
 );
 CREATE INDEX IF NOT EXISTS idx_inventario_codigo ON inventario(codigo);
 
+-- Catálogo de productos de Wansoft (incluye productos sin existencia)
+CREATE TABLE IF NOT EXISTS catalogo (
+  codigo        TEXT PRIMARY KEY,
+  nombre        TEXT,
+  unidad        TEXT,
+  departamento  TEXT,
+  tipo          TEXT,
+  costo_ideal   NUMERIC,
+  actualizado_en TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS ajustes (
   id               SERIAL PRIMARY KEY,
   folio            TEXT UNIQUE,
@@ -137,7 +148,7 @@ CREATE SEQUENCE IF NOT EXISTS seq_folio_aj START 1;
 DO $$
 DECLARE t TEXT;
 BEGIN
-  FOREACH t IN ARRAY ARRAY['usuarios','sucursales','inventario','ajustes','proveedores','ordenes_compra',
+  FOREACH t IN ARRAY ARRAY['usuarios','sucursales','inventario','catalogo','ajustes','proveedores','ordenes_compra',
                            'oc_lineas','recepciones','oc_eventos','bitacora','ajustes_config'] LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
     IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname='anon') THEN

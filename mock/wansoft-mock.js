@@ -31,6 +31,13 @@ function inventario(id) {
   return `<NewDataSet>${rows}</NewDataSet>`;
 }
 
+// Catálogo con el formato real de GetProducts (incluye un producto que nadie tiene en existencia)
+function catalogo() {
+  const todos = [...PRODUCTOS, ['MOZ-011', 'Orégano molido 1kg', 'KG', 'Abarrotes', 210]];
+  return `<NewDataSet>${todos.map(([c, n, u, d, cost], i) =>
+    `<Table><Id>${700000 + i}</Id><Codigo>${c}</Codigo><Nombre>${esc(n)}</Nombre><IdUnidadMedida>${i + 1}</IdUnidadMedida><UnidadMedida>${u}</UnidadMedida><IdDepartamento>${30080 + i}</IdDepartamento><Departamento>${esc(d)}</Departamento><TipoProducto>Materia prima</TipoProducto><CostoIdeal>${i === 10 ? cost : 0}.000000</CostoIdeal><ConIVA>Si</ConIVA><IEPS>0.0000</IEPS></Table>`).join('')}</NewDataSet>`;
+}
+
 function entradas(id, fecha) {
   const day = Number(fecha.slice(8, 10));
   let rows = '';
@@ -52,6 +59,7 @@ http.createServer((req, res) => {
     if (!ok) result = 'Credenciales incorrectas';
     else if (method === 'GetInventory_Xml') result = inventario(id);
     else if (method === 'GetInputInventory_Xml') result = entradas(id, g('operationdate'));
+    else if (method === 'GetProducts_Xml') result = catalogo();
     else result = '<NewDataSet></NewDataSet>';
     res.writeHead(200, { 'Content-Type': 'text/xml; charset=utf-8' });
     res.end(`<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><${method}Response xmlns="http://tempuri.org/"><${method}Result>${esc(result)}</${method}Result></${method}Response></soap:Body></soap:Envelope>`);

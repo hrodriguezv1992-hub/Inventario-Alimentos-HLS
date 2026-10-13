@@ -58,8 +58,8 @@ async function guardarLineas(c, ocId, lineas) {
     // Si no viene nombre/unidad, se toman del inventario de Wansoft
     await c.query(`INSERT INTO oc_lineas (oc_id,codigo,nombre,unidad,cantidad,costo_unitario)
       SELECT $1,$2,
-        COALESCE($3,(SELECT nombre FROM inventario WHERE codigo=$2 AND nombre IS NOT NULL LIMIT 1)),
-        COALESCE($4,(SELECT unidad FROM inventario WHERE codigo=$2 AND unidad IS NOT NULL LIMIT 1)),
+        COALESCE($3,(SELECT nombre FROM inventario WHERE codigo=$2 AND nombre IS NOT NULL LIMIT 1),(SELECT nombre FROM catalogo WHERE codigo=$2)),
+        COALESCE($4,(SELECT unidad FROM inventario WHERE codigo=$2 AND unidad IS NOT NULL LIMIT 1),(SELECT unidad FROM catalogo WHERE codigo=$2)),
         $5,$6`,
       [ocId, l.codigo, l.nombre, l.unidad, l.cantidad, l.costo_unitario]);
   }

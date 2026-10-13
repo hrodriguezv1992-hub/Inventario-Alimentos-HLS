@@ -121,18 +121,22 @@ const PATRONES = {
   departamento: [/^(departamento|department|grupo|categoria|familia)$/i, /depart|grupo|categ|famil/i],
   costo:        [/^(costo|cost|costounitario|unitcost|costopromedio|precio|price)$/i, /costo|cost|precio|price/i],
   valor:        [/^(monto|importe|valor|valortotal|total|montototal)$/i, /monto|importe|valor/i],
-  tipo:         [/^(tipo|tipoentrada|type|entrytype|idtipoentrada|tipodeentrada)$/i, /tipo|type/i],
+  tipo:         [/^(tipo|tipoentrada|type|entrytype|idtipoentrada|tipodeentrada|tipoproducto)$/i, /tipo|type/i],
   referencia:   [/^(id|folio|documentid|iddocumento|referencia|documento|numero)$/i, /folio|docum|refer|^id/i],
   fecha:        [/^(fecha|date|operationdate|fechaoperacion)$/i, /fecha|date/i],
   proveedor:    [/^(proveedor|supplier|vendor|nombreproveedor)$/i, /provee|supplier|vendor/i],
 };
 
+// Columnas tipo "IdUnidadMedida" son llaves internas: no se usan para nombres o unidades
+const esLlaveId = col => /^Id[A-Z_]/.test(col.split('.').pop());
+
 function detectar(columnas, campos) {
   const usado = new Set();
   const m = {};
   for (const campo of campos) {
-    for (const re of PATRONES[campo]) {
-      const c = columnas.find(col => !usado.has(col) && re.test(col.split('.').pop()));
+    for (const [i, re] of PATRONES[campo].entries()) {
+      const c = columnas.find(col => !usado.has(col) && re.test(col.split('.').pop()) &&
+        (i === 0 || campo === 'referencia' || campo === 'tipo' || !esLlaveId(col)));
       if (c) { m[campo] = c; usado.add(c); break; }
     }
   }
@@ -152,6 +156,7 @@ async function credenciales(suc) {
 
 const CAMPOS_INV = ['codigo', 'nombre', 'existencia', 'unidad', 'departamento', 'costo', 'valor'];
 const CAMPOS_ENT = ['codigo', 'nombre', 'existencia', 'tipo', 'referencia', 'fecha', 'proveedor', 'unidad', 'costo'];
+const CAMPOS_PROD = ['codigo', 'nombre', 'unidad', 'departamento', 'tipo', 'costo'];
 
 async function mapeo(clave, campos, columnas) {
   const guardado = (await getConfig(`mapeo:${clave}`)) || {};
@@ -196,6 +201,21 @@ async function inventario(suc) {
     delete f.valor;
   }
   return [...porCodigo.values()];
+}
+
+// Catálogo completo de productos (incluye los que no tienen existencia)
+async function productos(suc) {
+  const regs = aRegistros(await call('GetProducts_Xml', await credenciales(suc)));
+  if (!regs.length) return [];
+  const cols = Object.keys(regs[0]);
+  const m = await mapeo('productos', CAMPOS_PROD, cols);
+  if (!m.codigo) throw new WansoftError(`No se reconoció la columna de código del catálogo (columnas: ${cols.join(', ')})`);
+  const txt = (r, k) => (m[k] ? String(r[m[k]] ?? '').trim() || null : null);
+  return regs.map(r => ({
+    codigo: String(r[m.codigo] ?? '').trim(),
+    nombre: txt(r, 'nombre'), unidad: txt(r, 'unidad'), departamento: txt(r, 'departamento'), tipo: txt(r, 'tipo'),
+    costo: m.costo ? num(r[m.costo]) : null,
+  })).filter((p, i, arr) => p.codigo && arr.findIndex(x => x.codigo === p.codigo) === i);
 }
 
 // Entradas de inventario de un día (para confirmar recepciones de órdenes)
@@ -245,16 +265,17 @@ async function diagnostico(suc, metodo, dia) {
   const raw = await call(metodo, params);
   const regs = aRegistros(raw);
   const cols = regs.length ? Object.keys(regs[0]) : [];
-  const clave = metodo === 'GetInputInventory_Xml' ? 'entradas' : 'inventario';
+  const clave = { GetInputInventory_Xml: 'entradas', GetInventory_Xml: 'inventario', GetProducts_Xml: 'productos' }[metodo];
+  const campos = { entradas: CAMPOS_ENT, inventario: CAMPOS_INV, productos: CAMPOS_PROD }[clave];
   return {
     metodo, ms: Date.now() - t0, total: regs.length, columnas: cols,
-    mapeo: cols.length ? await mapeo(clave, clave === 'entradas' ? CAMPOS_ENT : CAMPOS_INV, cols) : {},
+    mapeo: cols.length && clave ? await mapeo(clave, campos, cols) : {},
     muestra: regs.slice(0, 15),
     crudo: typeof raw === 'string' ? raw.slice(0, 3000) : JSON.stringify(raw).slice(0, 3000),
   };
 }
 
 module.exports = {
-  call, aRegistros, detectar, inventario, entradas, esEntradaDeCompra, diagnostico,
+  call, aRegistros, detectar, inventario, productos, entradas, esEntradaDeCompra, diagnostico,
   WansoftError, CAMPOS_INV, CAMPOS_ENT, METODOS_DIAG, fecha,
 };

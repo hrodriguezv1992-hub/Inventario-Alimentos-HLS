@@ -6,7 +6,24 @@ let corriendo = null;
 async function syncSucursal(suc, usuarioId) {
   try {
     const filas = await wansoft.inventario(suc);
+    // El catálogo es opcional: si falla, el inventario se guarda igual
+    let catalogo = [];
+    try { catalogo = await wansoft.productos(suc); } catch (e) { console.warn('Catálogo', suc.nombre, e.message); }
     await tx(async c => {
+      for (let i = 0; i < catalogo.length; i += 500) {
+        const lote = catalogo.slice(i, i + 500);
+        const vals = [];
+        const ph = lote.map((p, j) => {
+          vals.push(p.codigo, p.nombre, p.unidad, p.departamento, p.tipo, p.costo || null);
+          const b = j * 6;
+          return `($${b + 1},$${b + 2},$${b + 3},$${b + 4},$${b + 5},$${b + 6},NOW())`;
+        });
+        await c.query(`INSERT INTO catalogo (codigo,nombre,unidad,departamento,tipo,costo_ideal,actualizado_en)
+          VALUES ${ph.join(',')}
+          ON CONFLICT (codigo) DO UPDATE SET nombre=COALESCE(EXCLUDED.nombre,catalogo.nombre), unidad=COALESCE(EXCLUDED.unidad,catalogo.unidad),
+            departamento=COALESCE(EXCLUDED.departamento,catalogo.departamento), tipo=COALESCE(EXCLUDED.tipo,catalogo.tipo),
+            costo_ideal=COALESCE(EXCLUDED.costo_ideal,catalogo.costo_ideal), actualizado_en=NOW()`, vals);
+      }
       await c.query('DELETE FROM inventario WHERE sucursal_id=$1', [suc.id]);
       // Inserción por lotes
       for (let i = 0; i < filas.length; i += 500) {
@@ -22,7 +39,7 @@ async function syncSucursal(suc, usuarioId) {
       }
       await c.query('UPDATE sucursales SET ultimo_sync=NOW(), ultimo_error=NULL WHERE id=$1', [suc.id]);
     });
-    return { sucursal: suc.nombre, ok: true, productos: filas.length };
+    return { sucursal: suc.nombre, ok: true, productos: filas.length, catalogo: catalogo.length };
   } catch (e) {
     await pool.query('UPDATE sucursales SET ultimo_error=$1 WHERE id=$2', [e.message.slice(0, 500), suc.id]);
     if (!(e instanceof wansoft.WansoftError)) console.error('Sync', suc.nombre, e);

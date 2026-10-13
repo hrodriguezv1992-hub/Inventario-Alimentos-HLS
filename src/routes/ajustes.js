@@ -45,7 +45,12 @@ r.post('/', async (req, res) => {
       if (!it.codigo || it.existencia_fisica === '' || it.existencia_fisica == null) continue;
       const fisica = Number(it.existencia_fisica);
       if (!Number.isFinite(fisica) || fisica < 0) throw Object.assign(new Error(`Cantidad no válida para ${it.codigo}`), { status: 400 });
-      const { rows: inv } = await c.query('SELECT * FROM inventario WHERE sucursal_id=$1 AND codigo=$2', [sucursal_id, it.codigo]);
+      const { rows: inv } = await c.query(`SELECT i.*, c.nombre AS c_nombre, c.unidad AS c_unidad, c.costo_ideal
+        FROM (SELECT $2::text AS codigo) k
+        LEFT JOIN inventario i ON i.sucursal_id=$1 AND i.codigo=k.codigo
+        LEFT JOIN catalogo c ON c.codigo=k.codigo`, [sucursal_id, it.codigo]);
+      // Producto sin existencia en Wansoft: el sistema lo tiene en 0
+      if (inv[0] && inv[0].sucursal_id == null) inv[0] = { existencia: 0, nombre: inv[0].c_nombre, unidad: inv[0].c_unidad, costo: inv[0].costo_ideal };
       const sistema = inv[0] ? Number(inv[0].existencia) : 0;
       const dif = fisica - sistema;
       if (Math.abs(dif) < 0.0001) continue;

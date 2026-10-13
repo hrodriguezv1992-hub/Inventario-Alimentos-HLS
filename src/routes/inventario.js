@@ -4,6 +4,11 @@ const { sucursalesPermitidas, puedeSucursal } = require('../auth');
 
 const r = express.Router();
 
+// Búsqueda sin importar acentos ni mayúsculas
+const sinAcentos = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+const norm = col => `translate(lower(coalesce(${col},'')), 'áéíóúüñàèìòù', 'aeiouunaeiou')`;
+const coincide = (cod, nom, p) => `(${p} = '' OR ${norm(cod)} LIKE '%'||${p}||'%' OR ${norm(nom)} LIKE '%'||${p}||'%')`;
+
 // Matriz producto × sucursal con totales
 r.get('/consolidado', async (req, res) => {
   const permit = sucursalesPermitidas(req.user);
@@ -15,13 +20,13 @@ r.get('/consolidado', async (req, res) => {
     WHERE activa AND ($1::int[] IS NULL OR id = ANY($1)) ORDER BY nombre`, [ids]);
   const sucIds = sucs.map(s => s.id);
 
-  const q = String(req.query.q || '').trim();
+  const q = sinAcentos(req.query.q);
   const dep = String(req.query.departamento || '').trim();
   const { rows } = await pool.query(`
     SELECT codigo, sucursal_id, nombre, unidad, departamento, existencia, costo
     FROM inventario
     WHERE sucursal_id = ANY($1)
-      AND ($2 = '' OR codigo ILIKE '%'||$2||'%' OR nombre ILIKE '%'||$2||'%')
+      AND ${coincide('codigo', 'nombre', '$2')}
       AND ($3 = '' OR departamento = $3)`, [sucIds, q, dep]);
 
   const { rows: pend } = await pool.query(`
@@ -59,20 +64,30 @@ r.get('/consolidado', async (req, res) => {
 
 // Buscador de productos (para órdenes y ajustes)
 r.get('/productos', async (req, res) => {
-  const q = String(req.query.q || '').trim();
+  const q = sinAcentos(req.query.q);
   const suc = req.query.sucursal_id ? Number(req.query.sucursal_id) : null;
   if (suc && !puedeSucursal(req.user, suc)) return res.status(403).json({ error: 'No tienes acceso a esta sucursal' });
+  // Catálogo completo + inventario: así aparecen también los productos agotados
   const { rows } = await pool.query(`
-    SELECT i.codigo,
-           MAX(i.nombre) AS nombre, MAX(i.unidad) AS unidad, MAX(i.departamento) AS departamento,
-           MAX(i.costo) AS costo,
-           SUM(i.existencia) AS total,
-           SUM(CASE WHEN i.sucursal_id = $2 THEN i.existencia END) AS existencia_sucursal
-    FROM inventario i
-    WHERE ($1 = '' OR i.codigo ILIKE '%'||$1||'%' OR i.nombre ILIKE '%'||$1||'%')
-      AND ($3::int[] IS NULL OR i.sucursal_id = ANY($3))
-    GROUP BY i.codigo
-    ORDER BY MAX(i.nombre) NULLS LAST
+    WITH cods AS (
+      SELECT codigo FROM catalogo WHERE ${coincide('codigo', 'nombre', '$1')}
+      UNION
+      SELECT codigo FROM inventario WHERE ${coincide('codigo', 'nombre', '$1')}
+        AND ($3::int[] IS NULL OR sucursal_id = ANY($3))
+    )
+    SELECT k.codigo,
+           COALESCE(MAX(i.nombre), MAX(c.nombre)) AS nombre,
+           COALESCE(MAX(i.unidad), MAX(c.unidad)) AS unidad,
+           COALESCE(MAX(i.departamento), MAX(c.departamento)) AS departamento,
+           MAX(c.tipo) AS tipo,
+           COALESCE(NULLIF(MAX(i.costo),0), NULLIF(MAX(c.costo_ideal),0)) AS costo,
+           COALESCE(SUM(i.existencia),0) AS total,
+           COALESCE(SUM(CASE WHEN i.sucursal_id = $2 THEN i.existencia END),0) AS existencia_sucursal
+    FROM cods k
+    LEFT JOIN catalogo c ON c.codigo = k.codigo
+    LEFT JOIN inventario i ON i.codigo = k.codigo AND ($3::int[] IS NULL OR i.sucursal_id = ANY($3))
+    GROUP BY k.codigo
+    ORDER BY 2 NULLS LAST
     LIMIT 40`, [q, suc, sucursalesPermitidas(req.user)]);
   res.json(rows);
 });

@@ -66,7 +66,7 @@ r.post('/:id/diagnostico', requireRol('admin'), async (req, res) => {
 
 // Guarda qué columna de Wansoft corresponde a cada dato
 r.put('/config/mapeo/:clave', requireRol('admin'), async (req, res) => {
-  if (!['inventario', 'entradas'].includes(req.params.clave)) return res.status(400).json({ error: 'Mapeo desconocido' });
+  if (!['inventario', 'entradas', 'productos'].includes(req.params.clave)) return res.status(400).json({ error: 'Mapeo desconocido' });
   const limpio = {};
   for (const [k, v] of Object.entries(req.body || {})) if (typeof v === 'string' && v) limpio[k] = v;
   await setConfig(`mapeo:${req.params.clave}`, limpio);

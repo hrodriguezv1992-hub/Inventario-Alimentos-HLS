@@ -1060,7 +1060,7 @@ async function vSucursales() {
   $$('[data-ed]').forEach(b => b.onclick = () => formSucursal(S.sucursales.find(s => s.id === +b.dataset.ed)));
   $$('[data-sy]').forEach(b => b.onclick = () => accion(b, async () => {
     const r = await api(`/sucursales/${b.dataset.sy}/sync`, { method: 'POST' });
-    toast(r.ok ? `${r.sucursal}: ${r.productos} productos` : `${r.sucursal}: ${r.error}`, r.ok ? null : 'error');
+    toast(r.ok ? `${r.sucursal}: ${r.productos} con existencia, ${r.catalogo} en catálogo` : `${r.sucursal}: ${r.error}`, r.ok ? null : 'error');
     vSucursales();
   }));
 }
@@ -1152,6 +1152,7 @@ function cambiarPassword() {
 // ════════════════════════════════════════════════════════════════
 const CAMPOS = {
   inventario: [['codigo', 'Código del producto'], ['nombre', 'Nombre'], ['existencia', 'Existencia'], ['unidad', 'Unidad'], ['departamento', 'Departamento'], ['costo', 'Costo unitario'], ['valor', 'Valor total (Monto)']],
+  productos: [['codigo', 'Código del producto'], ['nombre', 'Nombre'], ['unidad', 'Unidad'], ['departamento', 'Departamento'], ['tipo', 'Tipo de producto'], ['costo', 'Costo ideal']],
   entradas: [['codigo', 'Código del producto'], ['nombre', 'Nombre'], ['existencia', 'Cantidad que entró'], ['tipo', 'Tipo de entrada'], ['referencia', 'Folio o ID de la entrada'], ['fecha', 'Fecha'], ['proveedor', 'Proveedor']],
 };
 function vDiagnostico() {
@@ -1174,7 +1175,7 @@ function vDiagnostico() {
   $('#dg-go')?.addEventListener('click', e => accion(e.currentTarget, async () => {
     const metodo = $('#dg-m').value;
     const r = await api(`/sucursales/${$('#dg-s').value}/diagnostico`, { method: 'POST', body: { metodo, fecha: $('#dg-f').value } });
-    const clave = metodo === 'GetInputInventory_Xml' ? 'entradas' : metodo === 'GetInventory_Xml' ? 'inventario' : null;
+    const clave = { GetInputInventory_Xml: 'entradas', GetInventory_Xml: 'inventario', GetProducts_Xml: 'productos' }[metodo] || null;
     $('#dg-res').innerHTML = `<div class="aviso" style="margin-bottom:14px">Wansoft respondió en ${(r.ms / 1000).toFixed(1)} s con ${fmt(r.total)} registros y ${r.columnas.length} columnas.</div>
       ${clave && r.columnas.length ? `<div class="caja" style="padding:16px;margin-bottom:16px"><h3>¿Qué columna es cada dato?</h3>
         <p class="muted" style="margin:4px 0 12px">Se detectó automáticamente. Corrígelo si algo no corresponde y guarda.</p>
