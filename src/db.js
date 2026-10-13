@@ -2,9 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
 
-const connectionString = process.env.DATABASE_URL;
+// Acepta DATABASE_URL o SUPABASE_URL (Session pooler de Supabase, puerto 5432)
+const connectionString = process.env.SUPABASE_URL || process.env.DATABASE_URL;
 if (!connectionString) {
-  console.error('Falta la variable DATABASE_URL');
+  console.error('Falta la variable SUPABASE_URL (o DATABASE_URL) con la conexión a Supabase');
   process.exit(1);
 }
 

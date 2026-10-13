@@ -13,10 +13,10 @@ Portal para ver el inventario de todas las sucursales de Wansoft en una sola pan
 
 ## Cómo se instala (Railway + Supabase)
 
-1. **Supabase**: crea un proyecto nuevo. En *Settings → Database → Connection pooling* copia la cadena con puerto **6543**.
+1. **Supabase**: crea un proyecto nuevo. En *Connect → Direct → Session pooler* copia la cadena (IPv4, puerto 5432). La *Direct connection* es solo IPv6 y no funciona desde Railway.
 2. **GitHub**: sube este proyecto a un repositorio nuevo.
 3. **Railway**: *New Project → Deploy from GitHub repo* → elige el repositorio.
-4. En Railway → *Variables*, agrega las de `.env.example` (`DATABASE_URL`, `JWT_SECRET`, `ENCRYPTION_KEY`, `ADMIN_PASSWORD`, `SYNC_MINUTES`).
+4. En Railway → *Variables*, agrega las de `.env.example` (`SUPABASE_URL`, `JWT_SECRET`, `ENCRYPTION_KEY`, `ADMIN_PASSWORD`, `SYNC_MINUTES`).
 5. En Railway → *Settings → Networking* genera el dominio público. Esa es la dirección del portal (el mismo servidor sirve las pantallas y la API; no se necesita GitHub Pages).
 6. Entra con `admin` y la contraseña de `ADMIN_PASSWORD`. Cámbiala desde el menú.
 7. Ve a **Sucursales y Wansoft**, captura el *subsidiaryId* y *pwdWebService* de cada sucursal y usa *Guardar y probar conexión*.
