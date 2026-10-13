@@ -86,7 +86,19 @@ router.post('/cambiar-password', requireAuth, async (req, res) => {
 // Crea el primer administrador si la tabla está vacía
 async function asegurarAdmin() {
   const { rows } = await pool.query('SELECT COUNT(*)::int AS n FROM usuarios');
-  if (rows[0].n > 0) return;
+  if (rows[0].n > 0) {
+    // Si el admin se creó antes de configurar ADMIN_PASSWORD y nunca ha entrado,
+    // se le asigna la contraseña de la variable.
+    if (process.env.ADMIN_PASSWORD) {
+      const r = await pool.query(`
+        UPDATE usuarios SET password_hash=$1
+        WHERE usuario='admin' AND NOT EXISTS (
+          SELECT 1 FROM bitacora b WHERE b.usuario_id=usuarios.id AND b.accion='login')
+        RETURNING id`, [await bcrypt.hash(process.env.ADMIN_PASSWORD, 10)]);
+      if (r.rowCount) console.log('Contraseña de admin tomada de ADMIN_PASSWORD');
+    }
+    return;
+  }
   let pwd = process.env.ADMIN_PASSWORD;
   if (!pwd) {
     pwd = require('crypto').randomBytes(9).toString('base64url');
