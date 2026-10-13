@@ -120,6 +120,7 @@ const PATRONES = {
   unidad:       [/^(unidad|unit|um|uom|unidadmedida|unitofmeasure)$/i, /unidad|unit|uom|medida/i],
   departamento: [/^(departamento|department|grupo|categoria|familia)$/i, /depart|grupo|categ|famil/i],
   costo:        [/^(costo|cost|costounitario|unitcost|costopromedio|precio|price)$/i, /costo|cost|precio|price/i],
+  valor:        [/^(monto|importe|valor|valortotal|total|montototal)$/i, /monto|importe|valor/i],
   tipo:         [/^(tipo|tipoentrada|type|entrytype|idtipoentrada|tipodeentrada)$/i, /tipo|type/i],
   referencia:   [/^(id|folio|documentid|iddocumento|referencia|documento|numero)$/i, /folio|docum|refer|^id/i],
   fecha:        [/^(fecha|date|operationdate|fechaoperacion)$/i, /fecha|date/i],
@@ -149,7 +150,7 @@ async function credenciales(suc) {
   return { subsidiaryId: suc.wansoft_id, pwdWebService: decrypt(suc.wansoft_pwd_enc) };
 }
 
-const CAMPOS_INV = ['codigo', 'nombre', 'existencia', 'unidad', 'departamento', 'costo'];
+const CAMPOS_INV = ['codigo', 'nombre', 'existencia', 'unidad', 'departamento', 'costo', 'valor'];
 const CAMPOS_ENT = ['codigo', 'nombre', 'existencia', 'tipo', 'referencia', 'fecha', 'proveedor', 'unidad', 'costo'];
 
 async function mapeo(clave, campos, columnas) {
@@ -181,9 +182,18 @@ async function inventario(suc) {
       departamento: m.departamento ? String(r[m.departamento] ?? '').trim() : null,
       costo: m.costo ? num(r[m.costo]) : null,
       existencia: 0,
+      valor: 0,
     };
     fila.existencia += num(r[m.existencia]);
+    if (m.valor) fila.valor += num(r[m.valor]);
     porCodigo.set(codigo, fila);
+  }
+  // Si Wansoft manda el valor total (Monto) y no el costo, costo = valor / existencia
+  for (const f of porCodigo.values()) {
+    if ((f.costo == null || f.costo === 0) && m.valor && f.existencia > 0) {
+      f.costo = Math.round((f.valor / f.existencia) * 10000) / 10000;
+    }
+    delete f.valor;
   }
   return [...porCodigo.values()];
 }

@@ -22,9 +22,10 @@ function inventario(id) {
   let rows = '';
   PRODUCTOS.forEach(([c, n, u, d, cost], i) => {
     if (seed(id, i) < 0.08) return; // algunas sucursales no manejan todos
-    for (const alm of ['General', 'Cocina']) {
+    for (const alm of ['General', 'Cocina']) { void alm;
       const ex = Math.round(seed(id, i + (alm === 'Cocina' ? 50 : 0)) * 40 * 100) / 100;
-      rows += `<Table><Codigo>${c}</Codigo><Descripcion>${esc(n)}</Descripcion><Unidad>${u}</Unidad><Departamento>${esc(d)}</Departamento><Almacen>${alm}</Almacen><Existencia>${ex}</Existencia><Costo>${cost}</Costo></Table>`;
+      // Mismo formato que devuelve Wansoft real: sin costo unitario, con Monto total
+      rows += `<Table><CodigoProducto>${c}</CodigoProducto><Producto>${esc(n)}</Producto><UnidadDeMedida>${u}</UnidadDeMedida><Departamento>${esc(d)}</Departamento><Existencia>${ex.toFixed(4)}</Existencia><Monto>${(ex * cost).toFixed(4)}</Monto></Table>`;
     }
   });
   return `<NewDataSet>${rows}</NewDataSet>`;
