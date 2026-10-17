@@ -1313,18 +1313,21 @@ function imprimirOrden(oc) {
 async function vProveedores() {
   S.proveedores = await api('/proveedores').catch(() => S.proveedores);
   $('#vista').innerHTML = cabeza('Proveedores', 'A quién se le compra. Se eligen al crear una orden.', esCompras() ? `<button class="btn primario" id="b-prov">Agregar proveedor</button>` : '') +
-    (S.proveedores.length ? `<div class="caja tabla-scroll"><table><thead><tr><th>Proveedor</th><th>Contacto</th><th>Teléfono</th><th>Correo</th><th>Estado</th>${esCompras() ? '<th></th>' : ''}</tr></thead>
-    <tbody>${S.proveedores.map(p => `<tr><td><b>${esc(p.nombre)}</b></td><td>${esc(p.contacto || '—')}</td><td>${esc(p.telefono || '—')}</td><td>${esc(p.email || '—')}</td>
+    (S.proveedores.length > 8 ? `<div class="barra-inv"><input type="search" id="pv-q" placeholder="Buscar proveedor o clave" style="width:260px"><span class="muted" style="font-size:13px">${S.proveedores.filter(p => p.activo).length} activos</span></div>` : '') +
+    (S.proveedores.length ? `<div class="caja tabla-scroll"><table class="ancho"><thead><tr><th>Proveedor</th><th>Clave Wansoft</th><th>Contacto</th><th>Teléfono</th><th>Correo</th><th>Estado</th>${esCompras() ? '<th></th>' : ''}</tr></thead>
+    <tbody>${S.proveedores.map(p => `<tr data-busca="${esc(normTxt(p.nombre + ' ' + (p.clave || '')))}"><td><b>${esc(p.nombre)}</b>${p.es_cedis ? ' <span class="est ok">CEDIS</span>' : ''}</td><td class="muted">${esc(p.clave || '—')}</td><td>${esc(p.contacto || '—')}</td><td>${esc(p.telefono || '—')}</td><td>${esc(p.email || '—')}</td>
       <td><span class="est ${p.activo ? 'ok' : 'cancelado'}">${p.activo ? 'Activo' : 'Inactivo'}</span></td>
       ${esCompras() ? `<td><button class="btn mini" data-pv="${p.id}">Editar</button></td>` : ''}</tr>`).join('')}</tbody></table></div>`
       : `<div class="caja vacio"><b>Sin proveedores</b>Agrega a tus proveedores para asignarlos en las órdenes.</div>`);
   $('#b-prov')?.addEventListener('click', () => formProveedor());
+  $('#pv-q')?.addEventListener('input', e => { const q = normTxt(e.target.value); $$('tr[data-busca]').forEach(tr => tr.hidden = !!q && !tr.dataset.busca.includes(q)); });
   $$('[data-pv]').forEach(b => b.onclick = () => formProveedor(S.proveedores.find(p => p.id === +b.dataset.pv)));
 }
 function formProveedor(p = {}) {
   const panel = abrirPanel(`<div class="panel-cab"><h2>${p.id ? 'Editar proveedor' : 'Agregar proveedor'}</h2>${botonCerrar}</div>
     <div class="panel-cuerpo">
       <label class="campo">Nombre<input type="text" id="pv-n" value="${esc(p.nombre || '')}"></label>
+      <label class="campo">Clave en Wansoft<input type="text" id="pv-k" value="${esc(p.clave || '')}"></label>
       <label class="campo">Contacto<input type="text" id="pv-c" value="${esc(p.contacto || '')}"></label>
       <label class="campo">Teléfono<input type="text" id="pv-t" value="${esc(p.telefono || '')}"></label>
       <label class="campo">Correo<input type="text" id="pv-e" value="${esc(p.email || '')}"></label>
@@ -1332,7 +1335,7 @@ function formProveedor(p = {}) {
     </div>
     <div class="panel-pie"><button class="btn primario" id="pv-g">Guardar proveedor</button><button class="btn" onclick="cerrarPanel()">Cancelar</button></div>`, { angosto: true });
   $('#pv-g', panel).onclick = e => accion(e.currentTarget, async () => {
-    const body = { nombre: $('#pv-n', panel).value, contacto: $('#pv-c', panel).value, telefono: $('#pv-t', panel).value, email: $('#pv-e', panel).value };
+    const body = { nombre: $('#pv-n', panel).value, clave: $('#pv-k', panel).value, contacto: $('#pv-c', panel).value, telefono: $('#pv-t', panel).value, email: $('#pv-e', panel).value };
     if (p.id) await api(`/proveedores/${p.id}`, { method: 'PUT', body: { ...body, activo: $('#pv-a', panel).checked } });
     else await api('/proveedores', { method: 'POST', body });
     cerrarPanel(); toast('Proveedor guardado'); vProveedores();
