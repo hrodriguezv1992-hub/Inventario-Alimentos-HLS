@@ -367,10 +367,12 @@ function opcionesProveedor(sel) {
 // Grupos de sucursales según su nombre
 // Grupos de sucursales: los define el administrador en Sucursales
 const SIN_GRUPO = 'Sin grupo';
-const grupoSuc = s => (S.sucursales.find(x => x.id === s.id)?.grupo) || SIN_GRUPO;
+// Si hay zonas, el inventario se puede agrupar por zona (ubicación) o por clase (venta)
+const porZona = () => (S.zonas || []).length > 0 && S.filtroInv.agrupar !== 'clase';
+const grupoSuc = s => { const x = S.sucursales.find(y => y.id === s.id); return (porZona() ? x?.zona : x?.grupo) || SIN_GRUPO; };
 function gruposInv() {
-  const usados = new Set(S.sucursales.filter(s => s.activa).map(s => s.grupo || SIN_GRUPO));
-  return [...(S.grupos || []).filter(g => usados.has(g)), ...(usados.has(SIN_GRUPO) ? [SIN_GRUPO] : [])];
+  const usados = new Set(S.sucursales.filter(s => s.activa).map(s => grupoSuc(s)));
+  return [...(porZona() ? S.zonas : (S.grupos || [])).filter(g => usados.has(g)), ...(usados.has(SIN_GRUPO) ? [SIN_GRUPO] : [])];
 }
 // Nombre corto para el encabezado: sin el prefijo de la marca
 function nombreCorto(n) {
@@ -449,7 +451,7 @@ async function iniciar() {
 async function cargarCatalogos() {
   if (S.user?.rol === 'empleado') { S.sucursales = []; S.proveedores = []; S.motivos = []; return; }
   const [s, p, m] = await Promise.all([api('/sucursales'), api('/proveedores'), api('/ajustes/motivos')]);
-  S.sucursales = s.sucursales; S.grupos = s.grupos || []; S.proveedores = p; S.motivos = m;
+  S.sucursales = s.sucursales; S.grupos = s.grupos || []; S.zonas = s.zonas || []; S.proveedores = p; S.motivos = m;
 }
 function salir() {
   S.token = null; S.user = null;
@@ -589,6 +591,7 @@ async function vInventario() {
   `<div class="barra-inv">
      <input type="search" id="f-q" placeholder="Buscar producto o código" value="${esc(S.filtroInv.q)}" aria-label="Buscar producto" style="width:240px">
      <select id="f-dep" aria-label="Departamento"><option value="">Todos los departamentos</option></select>
+     ${!acotado() && (S.zonas || []).length ? `<select id="f-agr" aria-label="Agrupar sucursales por"><option value="zona" ${porZona() ? 'selected' : ''}>Por zona</option><option value="clase" ${porZona() ? '' : 'selected'}>Por clase (venta)</option></select>` : ''}
      ${!acotado() && gruposInv().length > 1 ? `<div class="chips" role="group" aria-label="Grupo de sucursales">${[['todas', 'Todas'], ...gruposInv().map(g => [g, g])].map(([k, t]) =>
         `<button class="chip" data-g="${esc(k)}" aria-pressed="${S.filtroInv.grupo === k}">${esc(t)}</button>`).join('')}</div>` : ''}
      <span class="sep"></span>
@@ -625,6 +628,7 @@ async function vInventario() {
   $('#f-q').addEventListener('input', e => { clearTimeout(t); t = setTimeout(() => { S.filtroInv.q = e.target.value; cargarConsolidado(); }, 250); });
   $('#f-dep').addEventListener('change', e => { S.filtroInv.departamento = e.target.value; cargarConsolidado(); });
   $$('[data-g]').forEach(b => b.addEventListener('click', () => { S.filtroInv.grupo = b.dataset.g; $$('[data-g]').forEach(x => x.setAttribute('aria-pressed', x === b)); pintarMatriz(); }));
+  $('#f-agr')?.addEventListener('change', e => { S.filtroInv.agrupar = e.target.value; S.filtroInv.grupo = 'todas'; vInventario(); });
   $$('[data-m]').forEach(b => b.addEventListener('click', () => { S.filtroInv.modo = b.dataset.m; $$('[data-m]').forEach(x => x.setAttribute('aria-pressed', x === b)); pintarMatriz(); }));
   $('#f-ceros').onchange = e => { S.filtroInv.ocultarCeros = e.target.checked; pintarMatriz(); };
   $('#f-agot').onchange = e => { S.filtroInv.soloAgotados = e.target.checked; pintarMatriz(); };
