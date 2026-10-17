@@ -36,10 +36,10 @@ async function migrate() {
   // Grupos iniciales (se editan en Sucursales): se asignan según el nombre
   const g = await pool.query(`SELECT 1 FROM ajustes_config WHERE clave='grupos'`);
   if (!g.rowCount) {
-    await setConfig('grupos', ['Pizzerías', 'PTG', 'Burger', 'CEDIS']);
+    await setConfig('grupos', ['A', 'B', 'C', 'CEDIS']);
     await pool.query(`UPDATE sucursales SET grupo = CASE
-        WHEN nombre ILIKE '%cedis%' THEN 'CEDIS' WHEN nombre ILIKE '%burger%' THEN 'Burger'
-        WHEN nombre ILIKE 'PTG%' THEN 'PTG' ELSE 'Pizzerías' END WHERE grupo IS NULL`);
+        WHEN nombre ILIKE '%cedis%' THEN 'CEDIS' WHEN nombre ILIKE '%burger%' THEN 'C'
+        WHEN nombre ILIKE 'PTG%' THEN 'B' ELSE 'A' END WHERE grupo IS NULL`);
   }
 }
 
