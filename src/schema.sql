@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS sucursales (
   ultimo_error     TEXT
 );
 
+ALTER TABLE sucursales ADD COLUMN IF NOT EXISTS grupo TEXT;
+
 -- Foto del inventario de Wansoft por sucursal (se reemplaza en cada sincronización)
 CREATE TABLE IF NOT EXISTS inventario (
   sucursal_id    INTEGER NOT NULL REFERENCES sucursales(id) ON DELETE CASCADE,

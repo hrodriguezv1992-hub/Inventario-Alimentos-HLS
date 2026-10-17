@@ -364,14 +364,13 @@ function opcionesProveedor(sel) {
 }
 
 // Grupos de sucursales según su nombre
-function grupoDe(nombre) {
-  if (/cedis/i.test(nombre)) return 'cedis';
-  if (/burger/i.test(nombre)) return 'burger';
-  if (/^PTG/i.test(nombre)) return 'ptg';
-  return 'pizzerias';
+// Grupos de sucursales: los define el administrador en Sucursales
+const SIN_GRUPO = 'Sin grupo';
+const grupoSuc = s => (S.sucursales.find(x => x.id === s.id)?.grupo) || SIN_GRUPO;
+function gruposInv() {
+  const usados = new Set(S.sucursales.filter(s => s.activa).map(s => s.grupo || SIN_GRUPO));
+  return [...(S.grupos || []).filter(g => usados.has(g)), ...(usados.has(SIN_GRUPO) ? [SIN_GRUPO] : [])];
 }
-const GRUPOS = [['todas', 'Todas'], ['pizzerias', 'Pizzerías'], ['ptg', 'PTG'], ['burger', 'Burger'], ['cedis', 'CEDIS']];
-const NOMBRE_GRUPO = { pizzerias: 'Pizzerías', ptg: 'PTG', burger: 'Burger', cedis: 'CEDIS' };
 // Nombre corto para el encabezado: sin el prefijo de la marca
 function nombreCorto(n) {
   if (/burger/i.test(n)) return n.replace(/^.*burger\s*-\s*/i, 'Burger ');
@@ -449,7 +448,7 @@ async function iniciar() {
 async function cargarCatalogos() {
   if (S.user?.rol === 'empleado') { S.sucursales = []; S.proveedores = []; S.motivos = []; return; }
   const [s, p, m] = await Promise.all([api('/sucursales'), api('/proveedores'), api('/ajustes/motivos')]);
-  S.sucursales = s.sucursales; S.proveedores = p; S.motivos = m;
+  S.sucursales = s.sucursales; S.grupos = s.grupos || []; S.proveedores = p; S.motivos = m;
 }
 function salir() {
   S.token = null; S.user = null;
@@ -589,8 +588,8 @@ async function vInventario() {
   `<div class="barra-inv">
      <input type="search" id="f-q" placeholder="Buscar producto o código" value="${esc(S.filtroInv.q)}" aria-label="Buscar producto" style="width:240px">
      <select id="f-dep" aria-label="Departamento"><option value="">Todos los departamentos</option></select>
-     ${!acotado() ? `<div class="chips" role="group" aria-label="Grupo de sucursales">${GRUPOS.map(([k, t]) =>
-        `<button class="chip" data-g="${k}" aria-pressed="${S.filtroInv.grupo === k}">${t}</button>`).join('')}</div>` : ''}
+     ${!acotado() && gruposInv().length > 1 ? `<div class="chips" role="group" aria-label="Grupo de sucursales">${[['todas', 'Todas'], ...gruposInv().map(g => [g, g])].map(([k, t]) =>
+        `<button class="chip" data-g="${esc(k)}" aria-pressed="${S.filtroInv.grupo === k}">${esc(t)}</button>`).join('')}</div>` : ''}
      <span class="sep"></span>
      <div class="chips" role="group" aria-label="Vista">
        <button class="chip" data-m="sucursales" aria-pressed="${S.filtroInv.modo === 'sucursales'}">Por sucursal</button>
@@ -647,10 +646,11 @@ function sucursalesVisibles() {
   const d = S.consolidado;
   // Solo sucursales conectadas: con inventario sincronizado o con error de conexión
   const conDatos = new Set(d.productos.flatMap(p => Object.keys(p.por).map(Number)));
-  const orden = ['pizzerias', 'ptg', 'burger', 'cedis'];
+  const orden = gruposInv();
+  if (S.filtroInv.grupo !== 'todas' && !orden.includes(S.filtroInv.grupo)) S.filtroInv.grupo = 'todas';
   return d.sucursales.filter(s => (conDatos.has(s.id) || s.ultimo_error) &&
-    (S.filtroInv.grupo === 'todas' || grupoDe(s.nombre) === S.filtroInv.grupo))
-    .sort((a, b) => orden.indexOf(grupoDe(a.nombre)) - orden.indexOf(grupoDe(b.nombre)) || a.nombre.localeCompare(b.nombre, 'es'));
+    (S.filtroInv.grupo === 'todas' || grupoSuc(s) === S.filtroInv.grupo))
+    .sort((a, b) => orden.indexOf(grupoSuc(a)) - orden.indexOf(grupoSuc(b)) || a.nombre.localeCompare(b.nombre, 'es'));
 }
 
 function productosVisibles(ids) {
@@ -721,7 +721,7 @@ function pintarMatriz() {
   // Encabezado en dos niveles: marca y sucursal (nombre corto)
   const bandas = [];
   for (const s of sucs) {
-    const g = grupoDe(s.nombre), u = bandas[bandas.length - 1];
+    const g = grupoSuc(s), u = bandas[bandas.length - 1];
     if (u && u.g === g) u.n++; else bandas.push({ g, n: 1 });
   }
   const inicioGrupo = new Set(); let k = 0;
@@ -758,7 +758,7 @@ function pintarMatriz() {
   $('#inv-cont').innerHTML = resumen + `<div class="caja tabla-scroll matriz" style="--top-cols:${verBandas ? '26px' : '0px'}"><table>
     <thead>
       ${verBandas ? `<tr class="bandas"><th class="fijo c-prod"></th><th class="fijo c-tot"></th><th class="fijo c-val"></th>
-        ${bandas.map(b => `<th class="banda" colspan="${b.n}">${esc(NOMBRE_GRUPO[b.g] || b.g)}</th>`).join('')}</tr>` : ''}
+        ${bandas.map(b => `<th class="banda" colspan="${b.n}">${esc(b.g)}</th>`).join('')}</tr>` : ''}
       <tr class="cols">
         <th class="fijo c-prod ordenable" data-o="nombre" style="text-align:left">Producto${flecha('nombre')}</th>
         <th class="fijo c-tot ordenable" data-o="total">Total${flecha('total')}</th>
@@ -1302,15 +1302,72 @@ function formProveedor(p = {}) {
 // ════════════════════════════════════════════════════════════════
 //  Vista: Sucursales y claves de Wansoft
 // ════════════════════════════════════════════════════════════════
+// ── Grupos de sucursales ───────────────────────────────────────
+function htmlGrupos() {
+  const cuenta = g => S.sucursales.filter(s => (s.grupo || SIN_GRUPO) === g).length;
+  const sin = cuenta(SIN_GRUPO);
+  return `<div class="caja" style="padding:14px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <b>Grupos</b>
+    <div class="chips">${(S.grupos || []).map(g => `<span class="chip" style="cursor:default">${esc(g)} <span class="muted">${cuenta(g)}</span></span>`).join('')}
+      ${sin ? `<span class="chip" style="cursor:default;border-style:dashed">${SIN_GRUPO} <span class="muted">${sin}</span></span>` : ''}</div>
+    <span class="muted" style="font-size:13px">Separan las vistas del inventario. Asigna cada sucursal en la columna Grupo.</span>
+    <button class="btn mini" id="b-grupos" style="margin-left:auto">Editar grupos</button></div>`;
+}
+function selectGrupo(s) {
+  const gs = S.grupos || [];
+  return `<select data-grupo="${s.id}" aria-label="Grupo de ${esc(s.nombre)}" style="padding:4px 8px;font-size:13.5px">
+    <option value="">${SIN_GRUPO}</option>${gs.map(g => `<option ${s.grupo === g ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select>`;
+}
+function conectarGrupos(recargar) {
+  $('#b-grupos')?.addEventListener('click', () => editorGrupos(recargar));
+  $$('[data-grupo]').forEach(sel => sel.onchange = async () => {
+    try {
+      await api(`/sucursales/${sel.dataset.grupo}`, { method: 'PUT', body: { grupo: sel.value || null } });
+      const s = S.sucursales.find(x => x.id === +sel.dataset.grupo); if (s) s.grupo = sel.value || null;
+      toast(`${s?.nombre || 'Sucursal'}: ${sel.value || SIN_GRUPO}`);
+      recargar();
+    } catch (e) { toast(e.message, 'error'); }
+  });
+}
+function editorGrupos(recargar) {
+  const filas = (S.grupos || []).map(g => ({ nombre: g, anterior: g }));
+  const panel = abrirPanel(`<div class="panel-cab"><div><h2>Grupos de sucursales</h2><div class="muted">El orden de esta lista es el orden de las columnas en el inventario.</div></div>${botonCerrar}</div>
+    <div class="panel-cuerpo"><div id="gr-lista" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div><button class="btn" id="gr-add">Agregar grupo</button></div>
+      <div class="aviso">Si borras un grupo, sus sucursales quedan como "${SIN_GRUPO}".</div></div>
+    <div class="panel-pie"><button class="btn primario" id="gr-g">Guardar grupos</button><button class="btn" onclick="cerrarPanel()">Cancelar</button></div>`, { angosto: true });
+  const pintar = () => {
+    $('#gr-lista', panel).innerHTML = filas.map((f, i) => `<div style="display:flex;gap:6px;align-items:center">
+      <input type="text" data-i="${i}" value="${esc(f.nombre)}" placeholder="Nombre del grupo" style="flex:1" aria-label="Nombre del grupo ${i + 1}">
+      <button class="btn mini" data-up="${i}" ${i === 0 ? 'disabled' : ''} aria-label="Subir">↑</button>
+      <button class="btn mini" data-down="${i}" ${i === filas.length - 1 ? 'disabled' : ''} aria-label="Bajar">↓</button>
+      <button class="btn mini peligro" data-del="${i}">Quitar</button></div>`).join('') || '<div class="muted">Sin grupos: todas las sucursales se ven juntas.</div>';
+    $$('input[data-i]', panel).forEach(inp => inp.oninput = () => { filas[inp.dataset.i].nombre = inp.value; });
+    $$('[data-up]', panel).forEach(b => b.onclick = () => { const i = +b.dataset.up; [filas[i - 1], filas[i]] = [filas[i], filas[i - 1]]; pintar(); });
+    $$('[data-down]', panel).forEach(b => b.onclick = () => { const i = +b.dataset.down; [filas[i + 1], filas[i]] = [filas[i], filas[i + 1]]; pintar(); });
+    $$('[data-del]', panel).forEach(b => b.onclick = () => { filas.splice(+b.dataset.del, 1); pintar(); });
+  };
+  pintar();
+  $('#gr-add', panel).onclick = () => { filas.push({ nombre: '', anterior: null }); pintar(); $(`input[data-i="${filas.length - 1}"]`, panel).focus(); };
+  $('#gr-g', panel).onclick = e => accion(e.currentTarget, async () => {
+    const limpias = filas.map(f => ({ ...f, nombre: f.nombre.trim() })).filter(f => f.nombre);
+    const nombres = limpias.map(f => f.nombre.toLowerCase());
+    if (new Set(nombres).size !== nombres.length) throw new Error('Hay dos grupos con el mismo nombre');
+    if (nombres.includes(SIN_GRUPO.toLowerCase())) throw new Error(`"${SIN_GRUPO}" es un nombre reservado`);
+    await api('/grupos', { method: 'PUT', body: { grupos: limpias } });
+    cerrarPanel(); toast('Grupos guardados'); await cargarCatalogos(); recargar();
+  });
+}
+
 async function vSucursales() {
   await cargarCatalogos();
   const conectadas = S.sucursales.filter(s => s.wansoft_id && s.tiene_password).length;
   $('#vista').innerHTML = cabeza('Sucursales y Wansoft',
     `${conectadas} de ${S.sucursales.length} sucursales conectadas. Cada sucursal usa su propio ID y contraseña del WebService de Wansoft; la contraseña se guarda cifrada y nunca se vuelve a mostrar.`,
     `<button class="btn" id="b-suc-nueva">Agregar sucursal</button><button class="btn primario" id="b-suc-sync">Actualizar todas</button>`) +
-    `<div class="caja tabla-scroll"><table><thead><tr><th>Sucursal</th><th>ID Wansoft</th><th>Contraseña</th><th>Última actualización</th><th class="num">Productos</th><th></th></tr></thead>
+    htmlGrupos() + `<div class="caja tabla-scroll"><table><thead><tr><th>Sucursal</th><th>Grupo</th><th>ID Wansoft</th><th>Contraseña</th><th>Última actualización</th><th class="num">Productos</th><th></th></tr></thead>
     <tbody>${S.sucursales.map(s => `<tr>
-      <td><b>${esc(s.nombre)}</b>${s.activa ? '' : ' <span class="est cancelado">Inactiva</span>'}</td>
+      <td><b>${esc(s.nombre)}</b>${s.activa ? '' : ' <span class="est cancelado">Inactiva</span>'}</td><td>${selectGrupo(s)}</td>
       <td>${s.wansoft_id ? esc(s.wansoft_id) : '<span class="muted">Falta</span>'}</td>
       <td>${s.tiene_password ? '<span class="est ok">Guardada</span>' : '<span class="muted">Falta</span>'}</td>
       <td>${s.ultimo_error ? `<span class="est error" title="${esc(s.ultimo_error)}">Error</span><br><span class="muted" style="font-size:13px">${esc(s.ultimo_error.slice(0, 90))}</span>` : esc(hace(s.ultimo_sync))}</td>
@@ -1325,6 +1382,7 @@ async function vSucursales() {
   });
   $('#b-suc-nueva').onclick = () => formSucursal();
   $$('[data-ed]').forEach(b => b.onclick = () => formSucursal(S.sucursales.find(s => s.id === +b.dataset.ed)));
+  conectarGrupos(vSucursales);
   $$('[data-sy]').forEach(b => b.onclick = () => accion(b, async () => {
     const r = await api(`/sucursales/${b.dataset.sy}/sync`, { method: 'POST' });
     toast(r.ok ? `${r.sucursal}: ${r.productos} con existencia, ${r.catalogo} en catálogo` : `${r.sucursal}: ${r.error}`, r.ok ? null : 'error');

@@ -1,5 +1,5 @@
 const express = require('express');
-const { pool, log, setConfig } = require('../db');
+const { pool, log, setConfig, getConfig } = require('../db');
 const { requireRol, sucursalesPermitidas, puedeSucursal } = require('../auth');
 const { encrypt } = require('../crypto');
 const { syncSucursal, syncTodas, estaCorriendo } = require('../sync');
@@ -10,13 +10,13 @@ const r = express.Router();
 r.get('/', async (req, res) => {
   const permit = sucursalesPermitidas(req.user);
   const { rows } = await pool.query(`
-    SELECT s.id, s.nombre, s.wansoft_id, s.activa, s.ultimo_sync, s.ultimo_error,
+    SELECT s.id, s.nombre, s.grupo, s.wansoft_id, s.activa, s.ultimo_sync, s.ultimo_error,
            (s.wansoft_pwd_enc IS NOT NULL) AS tiene_password,
            (SELECT COUNT(*)::int FROM inventario i WHERE i.sucursal_id=s.id) AS productos
     FROM sucursales s
     WHERE ($1::int[] IS NULL OR s.id = ANY($1))
     ORDER BY s.nombre`, [permit]);
-  res.json({ sucursales: rows, sincronizando: estaCorriendo() });
+  res.json({ sucursales: rows, grupos: (await getConfig('grupos')) || [], sincronizando: estaCorriendo() });
 });
 
 r.post('/', requireRol('admin'), async (req, res) => {
@@ -28,17 +28,22 @@ r.post('/', requireRol('admin'), async (req, res) => {
 });
 
 r.put('/:id', requireRol('admin'), async (req, res) => {
-  const { nombre, wansoft_id, password, activa } = req.body || {};
+  const { nombre, wansoft_id, password, activa, grupo } = req.body || {};
   const sets = [], vals = [];
   const add = (col, v) => { vals.push(v); sets.push(`${col}=$${vals.length}`); };
   if (nombre !== undefined) add('nombre', String(nombre).trim());
   if (wansoft_id !== undefined) add('wansoft_id', wansoft_id === '' || wansoft_id === null ? null : Number(wansoft_id));
   if (password) add('wansoft_pwd_enc', encrypt(String(password).trim()));
   if (activa !== undefined) add('activa', !!activa);
+  if (grupo !== undefined) {
+    const grupos = (await getConfig('grupos')) || [];
+    if (grupo && !grupos.includes(grupo)) return res.status(400).json({ error: 'Ese grupo no existe' });
+    add('grupo', grupo || null);
+  }
   if (!sets.length) return res.json({ ok: true });
   vals.push(req.params.id);
   await pool.query(`UPDATE sucursales SET ${sets.join(',')} WHERE id=$${vals.length}`, vals);
-  await log(req.user.id, 'sucursal_editar', { id: Number(req.params.id), nombre, wansoft_id, cambio_password: !!password, activa });
+  await log(req.user.id, 'sucursal_editar', { id: Number(req.params.id), nombre, wansoft_id, cambio_password: !!password, activa, grupo });
   res.json({ ok: true });
 });
 

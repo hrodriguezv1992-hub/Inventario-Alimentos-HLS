@@ -18,7 +18,7 @@ const pool = new Pool({
 const SUCURSALES_INICIALES = [
   'Agujita', 'Castaños', 'CEDIS - Mozarella', 'Frontera Centro', 'Frontera Occidental',
   'Hipódromo', 'Juárez', 'Mon Centro', 'Monkeys', 'Mozarella Pizza - HEB',
-  'Mozarella Pizza - Palau', 'Mozarellas Pizza - Obregón', 'Muzquiz', 'Nueva Rosita',
+  'Mozarella Pizza - Palau', 'Mozarellas Pizza - Obrera', 'Muzquiz', 'Nueva Rosita',
   'PTG - Arteaga', 'PTG - Bellavista', 'PTG - CEDIS SALTILLO', 'PTG - Guayulera',
   'PTG - Lourdes', 'PTG - Manantiales', 'PTG - Mi Plaza', 'PTG - Sendero Sur',
   'Rosita 2', 'Sabinas', 'Sabinas Burger - Centro', 'San Buena',
@@ -32,6 +32,14 @@ async function migrate() {
     for (const nombre of SUCURSALES_INICIALES) {
       await pool.query('INSERT INTO sucursales (nombre) VALUES ($1) ON CONFLICT DO NOTHING', [nombre]);
     }
+  }
+  // Grupos iniciales (se editan en Sucursales): se asignan según el nombre
+  const g = await pool.query(`SELECT 1 FROM ajustes_config WHERE clave='grupos'`);
+  if (!g.rowCount) {
+    await setConfig('grupos', ['Pizzerías', 'PTG', 'Burger', 'CEDIS']);
+    await pool.query(`UPDATE sucursales SET grupo = CASE
+        WHEN nombre ILIKE '%cedis%' THEN 'CEDIS' WHEN nombre ILIKE '%burger%' THEN 'Burger'
+        WHEN nombre ILIKE 'PTG%' THEN 'PTG' ELSE 'Pizzerías' END WHERE grupo IS NULL`);
   }
 }
 

@@ -1,7 +1,7 @@
 // Proveedores, usuarios y bitácora
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const { pool, log } = require('../db');
+const { pool, log, tx, setConfig } = require('../db');
 const { requireRol, publico } = require('../auth');
 
 const r = express.Router();
@@ -59,6 +59,24 @@ r.put('/usuarios/:id', requireRol('admin'), async (req, res) => {
     [nombre || null, rol || null, sucursales ? sucursales.map(Number) : null, activo ?? null,
      password ? await bcrypt.hash(password, 10) : null, req.params.id]);
   await log(req.user.id, 'usuario_editar', { id: Number(req.params.id), rol, activo, cambio_password: !!password });
+  res.json({ ok: true });
+});
+
+// ── Grupos de sucursales ────────────────────────────────────
+// Recibe la lista completa [{ nombre, anterior }]: renombra, reordena y quita
+r.put('/grupos', requireRol('admin'), async (req, res) => {
+  const lista = (req.body?.grupos || []).map(g => ({ nombre: String(g.nombre || '').trim(), anterior: g.anterior || null })).filter(g => g.nombre);
+  const nombres = lista.map(g => g.nombre.toLowerCase());
+  if (new Set(nombres).size !== nombres.length) return res.status(400).json({ error: 'Hay dos grupos con el mismo nombre' });
+  if (nombres.includes('sin grupo')) return res.status(400).json({ error: '"Sin grupo" es un nombre reservado' });
+  await tx(async c => {
+    // Primero a nombres temporales para permitir intercambios (A→B, B→A)
+    for (const [i, g] of lista.entries()) if (g.anterior && g.anterior !== g.nombre) await c.query('UPDATE sucursales SET grupo=$1 WHERE grupo=$2', [`__tmp${i}`, g.anterior]);
+    for (const [i, g] of lista.entries()) if (g.anterior && g.anterior !== g.nombre) await c.query('UPDATE sucursales SET grupo=$1 WHERE grupo=$2', [g.nombre, `__tmp${i}`]);
+    await c.query('UPDATE sucursales SET grupo=NULL WHERE grupo IS NOT NULL AND NOT (grupo = ANY($1))', [lista.map(g => g.nombre)]);
+    await c.query(`INSERT INTO ajustes_config (clave, valor) VALUES ('grupos',$1) ON CONFLICT (clave) DO UPDATE SET valor=EXCLUDED.valor`, [JSON.stringify(lista.map(g => g.nombre))]);
+  });
+  await log(req.user.id, 'grupos_editar', { grupos: lista.map(g => g.nombre) });
   res.json({ ok: true });
 });
 
