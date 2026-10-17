@@ -1033,6 +1033,8 @@ function editorOrden(oc = null, pre = {}) {
   }]));
   let lista = [];               // todos los productos de la sucursal
   const vista = { q: '', dep: '', filtro: 'todos', origen: '' };
+  // ¿El proveedor elegido en la orden vende este producto? (relación producto–proveedor de Wansoft)
+  const vendeProv = p => { const pv = S.proveedores.find(x => String(x.id) === $('#oc-p', panel)?.value); return !pv || (p.vendedores || []).some(v => v === pv.id || (v === 'cedis' && pv.es_cedis)); };
 
   const panel = abrirPanel(`
     <div class="panel-cab"><div><h2>${oc ? 'Editar ' + esc(oc.folio) : 'Nueva orden de compra'}</h2><div class="muted">Elige la sucursal y escribe cuánto pedir de cada producto. Se guarda como borrador hasta que la envíes.</div></div>${botonCerrar}</div>
@@ -1051,6 +1053,7 @@ function editorOrden(oc = null, pre = {}) {
           <button class="chip" data-f="agotados">Agotados</button>
           <button class="chip oculto" data-f="sugerido" id="oc-chip-sug">Para pedir</button>
           <button class="chip" data-f="pedido">En el pedido</button>
+          <button class="chip oculto" data-f="vende" id="oc-chip-vende" title="Solo los productos que vende el proveedor elegido">Lo que vende el proveedor</button>
         </div>
         <span style="flex:1"></span>
         <span id="oc-orig" class="oculto muted" style="font-size:12.5px">Llena solo lo que surte el proveedor elegido</span>
@@ -1084,6 +1087,7 @@ function editorOrden(oc = null, pre = {}) {
       (!vista.dep || p.departamento === vista.dep) &&
       (vista.filtro !== 'agotados' || Number(p.existencia) <= 0) &&
       (vista.filtro !== 'sugerido' || p.reorden?.sugerido > 0) &&
+      (vista.filtro !== 'vende' || vendeProv(p)) &&
       (!vista.origen || p.reorden?.origen === vista.origen || (!p.reorden && vista.origen === 'cedis')) &&
       (vista.filtro !== 'pedido' || Number(pedido.get(p.codigo)?.cantidad) > 0));
     if (!filas.length) {
@@ -1142,6 +1146,7 @@ function editorOrden(oc = null, pre = {}) {
       $('#oc-dep', panel).innerHTML = '<option value="">Todos los departamentos</option>' + deps.map(d => `<option>${esc(d)}</option>`).join('');
       vista.dep = '';
       const hayReorden = lista.some(p => p.reorden);
+      $('#oc-chip-vende', panel).classList.toggle('oculto', !lista.some(p => p.vendedores?.length));
       ['#oc-chip-sug', '#oc-orig', '#oc-llenar'].forEach(id => $(id, panel).classList.toggle('oculto', !hayReorden));
     } catch (e) { toast(e.message, 'error'); }
     pintar();
@@ -1164,6 +1169,7 @@ function editorOrden(oc = null, pre = {}) {
     vista.filtro = 'pedido'; $$('[data-f]', panel).forEach(x => x.setAttribute('aria-pressed', x.dataset.f === 'pedido'));
     pintar(); toast(n ? `${n} producto${n === 1 ? '' : 's'} con la cantidad sugerida` : 'No hay sugeridos pendientes');
   };
+  $('#oc-p', panel).addEventListener('change', () => { if (vista.filtro === 'vende') pintar(); });
   sel.addEventListener('change', () => {
     if (lineasPedido().length && !confirm('Cambiar de sucursal conserva las cantidades que ya escribiste. ¿Continuar?')) return;
     cargarLista();
@@ -1315,7 +1321,7 @@ async function vProveedores() {
   $('#vista').innerHTML = cabeza('Proveedores', 'A quién se le compra. Se eligen al crear una orden.', esCompras() ? `<button class="btn primario" id="b-prov">Agregar proveedor</button>` : '') +
     (S.proveedores.length > 8 ? `<div class="barra-inv"><input type="search" id="pv-q" placeholder="Buscar proveedor o clave" style="width:260px"><span class="muted" style="font-size:13px">${S.proveedores.filter(p => p.activo).length} activos</span></div>` : '') +
     (S.proveedores.length ? `<div class="caja tabla-scroll"><table class="ancho"><thead><tr><th>Proveedor</th><th>Clave Wansoft</th><th>Contacto</th><th>Teléfono</th><th>Correo</th><th>Estado</th>${esCompras() ? '<th></th>' : ''}</tr></thead>
-    <tbody>${S.proveedores.map(p => `<tr data-busca="${esc(normTxt(p.nombre + ' ' + (p.clave || '')))}"><td><b>${esc(p.nombre)}</b>${p.es_cedis ? ' <span class="est ok">CEDIS</span>' : ''}</td><td class="muted">${esc(p.clave || '—')}</td><td>${esc(p.contacto || '—')}</td><td>${esc(p.telefono || '—')}</td><td>${esc(p.email || '—')}</td>
+    <tbody>${S.proveedores.map(p => `<tr data-busca="${esc(normTxt(p.nombre + ' ' + (p.clave || '')))}"><td><b>${esc(p.nombre)}</b>${p.es_cedis ? ' <span class="est ok">CEDIS</span>' : ''}</td><td class="muted">${esc(p.clave || '—')}${p.rfc && p.rfc !== p.clave ? `<div style="font-size:11.5px">RFC ${esc(p.rfc)}</div>` : ''}</td><td>${esc(p.contacto || '—')}</td><td>${esc(p.telefono || '—')}</td><td>${esc(p.email || '—')}</td>
       <td><span class="est ${p.activo ? 'ok' : 'cancelado'}">${p.activo ? 'Activo' : 'Inactivo'}</span></td>
       ${esCompras() ? `<td><button class="btn mini" data-pv="${p.id}">Editar</button></td>` : ''}</tr>`).join('')}</tbody></table></div>`
       : `<div class="caja vacio"><b>Sin proveedores</b>Agrega a tus proveedores para asignarlos en las órdenes.</div>`);
