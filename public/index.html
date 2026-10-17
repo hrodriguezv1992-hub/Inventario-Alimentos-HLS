@@ -295,7 +295,7 @@ const n0 = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 });
 const mx = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 const fmt = v => (v == null || v === '' ? '—' : n0.format(Number(v)));
 const dinero = v => (v == null ? '—' : mx.format(Number(v)));
-const fecha = v => v ? new Date(v).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+const fecha = v => v ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(v) ? v + 'T12:00:00' : v).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 const fechaHora = v => v ? new Date(v).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
 const hace = v => {
   if (!v) return 'nunca';
@@ -600,7 +600,7 @@ async function vInventario() {
    <div class="barra-inv">
      <label class="interruptor"><input type="checkbox" id="f-ceros" ${S.filtroInv.ocultarCeros ? 'checked' : ''}> Ocultar productos sin existencia</label>
      <label class="interruptor"><input type="checkbox" id="f-agot" ${S.filtroInv.soloAgotados ? 'checked' : ''}> Solo agotados en alguna sucursal</label>
-     <label class="interruptor"><input type="checkbox" id="f-pedir" ${S.filtroInv.paraPedir ? 'checked' : ''}> Solo en punto de reorden</label>
+     <label class="interruptor"><input type="checkbox" id="f-pedir" ${S.filtroInv.paraPedir ? 'checked' : ''}> Solo urgentes</label>
      <span class="sep"></span>
      <label class="interruptor">Ordenar por
        <select id="f-orden" aria-label="Ordenar por">${[['departamento', 'Departamento'], ['nombre', 'Nombre'], ['total', 'Existencia total'], ['valor', 'Valor'], ['agotados', 'Más agotados']].map(([k, t]) =>
@@ -702,7 +702,7 @@ function pintarMatriz() {
     <div><b>${fmt(prods.length)}</b><span>Productos en la vista · ${sucs.length} sucursal${sucs.length === 1 ? '' : 'es'}</span></div>
     <div><b>${dinero(valor)}</b><span>Valor del inventario a costo</span></div>
     <div><b style="color:${agotados ? '#9A2E1E' : 'inherit'}">${fmt(agotados)}</b><span>Productos agotados en al menos una sucursal</span></div>
-    ${enReorden ? `<div><b style="color:#7A5208">${fmt(enReorden)}</b><span>En punto de reorden (producto × sucursal)</span></div>` : ''}
+    ${enReorden ? `<div><b style="color:#7A5208">${fmt(enReorden)}</b><span>Urgentes: no llegan al próximo surtido</span></div>` : ''}
     ${negativos ? `<div><b style="color:var(--tomate)">${fmt(negativos)}</b><span>Existencias negativas por revisar</span></div>` : ''}
     ${ajustes ? `<div><b>${fmt(ajustes)}</b><span>Ajustes por capturar en Wansoft</span></div>` : ''}
     ${transito ? `<div><b>${fmt(transito)}</b><span>Productos en camino</span></div>` : ''}
@@ -741,7 +741,7 @@ function pintarMatriz() {
     if (v == null) return `<td class="${ini}"><span class="celda nomaneja" title="${esc(s.nombre)} no maneja este producto"></span></td>`;
     const ro = p.reorden?.[s.id];
     const cls = v < 0 ? 'neg' : v === 0 ? 'agotado' : ro?.pedir ? 'bajo' : '';
-    const tip = `${s.nombre}: ${fmt(v)} ${p.unidad || ''}${v === 0 ? ' (agotado)' : ''}${ro ? ` · punto de reorden ${fmt(ro.punto)}${ro.sugerido > 0 ? ` · sugerido ${fmt(ro.sugerido)}` : ''}` : ''}${aj ? ` · ajuste pendiente ${aj > 0 ? '+' : ''}${fmt(aj)}` : ''}${tr ? ` · en camino ${fmt(tr)}` : ''}`;
+    const tip = `${s.nombre}: ${fmt(v)} ${p.unidad || ''}${v === 0 ? ' (agotado)' : ''}${ro ? `${ro.pedir ? ' · urgente' : ''}${ro.sugerido > 0 ? ` · sugerido ${fmt(ro.sugerido)}` : ''}` : ''}${aj ? ` · ajuste pendiente ${aj > 0 ? '+' : ''}${fmt(aj)}` : ''}${tr ? ` · en camino ${fmt(tr)}` : ''}`;
     return `<td class="${ini}"><button class="celda ${cls}" data-c="${esc(p.clave || p.codigo)}" data-s="${s.id}" title="${esc(tip)}" aria-label="${esc(p.nombre + ', ' + tip)}">${aj ? '<span class="marca-aj"></span>' : ''}${fmt(v)}${tr ? `<span class="transito">+${fmt(tr)}</span>` : ''}</button></td>`;
   };
   const fila = p => `<tr>
@@ -775,7 +775,7 @@ function pintarMatriz() {
       </tr></thead>
     <tbody>${cuerpo}</tbody></table></div>
     <div class="leyenda">
-      <span><i style="background:#FBF1DC;border-color:#EBD6A8"></i>En punto de reorden</span>
+      <span><i style="background:#FBF1DC;border-color:#EBD6A8"></i>Urgente</span>
       <span><i style="background:#FBEDEA;border-color:#F0C9C1"></i>Agotado</span>
       <span><i style="background:var(--tomate);border-color:var(--tomate)"></i>Existencia negativa</span>
       <span><i style="background:repeating-linear-gradient(135deg,#fff 0 5px,#E6E8E3 5px 6px)"></i>La sucursal no maneja el producto</span>
@@ -1022,7 +1022,7 @@ async function cargarOrdenes() {
 }
 
 function editorOrden(oc = null, pre = {}) {
-  const base = oc || { sucursal_id: pre.sucursal_id || '', proveedor_id: '', fecha_entrega: '', notas: '', lineas: pre.lineas || [] };
+  const base = oc || { sucursal_id: pre.sucursal_id || '', proveedor_id: pre.proveedor_id || '', fecha_entrega: pre.fecha_entrega || '', notas: '', lineas: pre.lineas || [] };
   const misSucs = acotado() ? S.user.sucursales : null;
   if (!base.sucursal_id && misSucs?.length === 1) base.sucursal_id = misSucs[0];
 
@@ -1053,7 +1053,7 @@ function editorOrden(oc = null, pre = {}) {
           <button class="chip" data-f="pedido">En el pedido</button>
         </div>
         <span style="flex:1"></span>
-        <select id="oc-orig" class="oculto" aria-label="Quién surte"><option value="">Lo surte: todos</option><option value="cedis">Lo surte CEDIS</option><option value="proveedor">Lo surte el proveedor</option></select>
+        <span id="oc-orig" class="oculto muted" style="font-size:12.5px">Llena solo lo que surte el proveedor elegido</span>
         <button class="btn oculto" id="oc-llenar">Llenar con sugerido</button>
       </div>
       <div class="caja tabla-scroll" id="oc-items" style="max-height:calc(100vh - 430px);min-height:200px"></div>
@@ -1102,7 +1102,7 @@ function editorOrden(oc = null, pre = {}) {
           <td>${esc(p.departamento || '—')}</td>
           <td class="num ${ex <= 0 ? 'dif-neg' : ''}">${ex <= 0 ? (ex < 0 ? fmt(ex) : 'Agotado') : fmt(ex)}</td>
           <td class="num" style="color:var(--azul)">${Number(p.en_camino) > 0 ? fmt(p.en_camino) : ''}</td>
-          ${conReorden ? `<td class="num" title="${p.reorden ? esc(`Punto de reorden ${fmt(p.reorden.punto)} · objetivo ${fmt(p.reorden.objetivo)} · ${p.reorden.metodo === 'receta' ? 'por receta' : 'mínimo y máximo'} · lo surte ${p.reorden.origen === 'proveedor' ? 'el proveedor' : 'CEDIS'}`) : 'Sin punto de reorden'}">${p.reorden?.sugerido > 0
+          ${conReorden ? `<td class="num" title="${p.reorden ? esc(`Debe tener ${fmt(p.reorden.objetivo)} · ${p.reorden.metodo === 'receta' ? 'por receta (venta semanal)' : 'nivel fijo'} · lo surte ${p.reorden.surteNombre || 'sin proveedor asignado'}`) : 'Sin receta ni nivel'}">${p.reorden?.sugerido > 0
             ? `<button type="button" class="btn texto mini" data-usar="${esc(p.codigo)}" style="padding:0 2px;font-weight:600">${fmt(p.reorden.sugerido)}</button>${p.reorden.paquetes ? `<br><span class="muted" style="font-size:11.5px">${p.reorden.paquetes} ${esc((p.reorden.presNombre || 'paq.').toLowerCase())}</span>` : ''}`
             : `<span class="muted">${p.reorden ? '—' : ''}</span>`}</td>` : ''}
           <td class="num"><input type="number" min="0" step="any" data-c="${esc(p.codigo)}" data-k="cantidad" value="${esc(cant)}" aria-label="Cantidad a pedir de ${esc(p.nombre)}"></td>
@@ -1150,12 +1150,12 @@ function editorOrden(oc = null, pre = {}) {
     if (primero && !oc) { vista.filtro = 'pedido'; $$('[data-f]', panel).forEach(x => x.setAttribute('aria-pressed', x.dataset.f === 'pedido')); pintar(); $('input[data-k=cantidad]', panel)?.focus(); }
   };
 
-  $('#oc-orig', panel).onchange = e => { vista.origen = e.target.value; pintar(); };
   $('#oc-llenar', panel).onclick = () => {
     let n = 0;
     for (const p of lista) {
       if (!(p.reorden?.sugerido > 0)) continue;
-      if (vista.origen && p.reorden.origen !== vista.origen) continue;
+      const pv = $('#oc-p', panel).value;
+      if (pv && String(p.reorden.surte ?? '') !== pv) continue;
       const l = pedido.get(p.codigo);
       if (l && Number(l.cantidad) > 0) continue;   // no pisa lo que ya escribiste
       pedido.set(p.codigo, { codigo: p.codigo, nombre: p.nombre, unidad: p.unidad, cantidad: p.reorden.sugerido, costo_unitario: l?.costo_unitario ?? (p.costo != null ? Number(p.costo) : 0) });
