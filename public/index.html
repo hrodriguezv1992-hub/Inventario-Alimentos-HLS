@@ -94,29 +94,53 @@ tbody tr.clic:hover td{background:#F6F8F5}
 .vacio{padding:40px 20px;text-align:center;color:var(--tinta-2)}
 .vacio b{display:block;font-family:var(--display);font-size:18px;color:var(--tinta);margin-bottom:4px}
 
-/* ── Matriz consolidada (lo distintivo) ───────────── */
-.matriz{max-height:calc(100vh - 230px)}
-.matriz table{width:max-content;min-width:100%}
-.matriz th,.matriz td{border-right:1px solid var(--linea-2);padding:0}
-.matriz thead th{position:sticky;top:0;z-index:2;padding:0}
-.matriz .col-prod{position:sticky;left:0;z-index:1;background:var(--papel);width:280px;min-width:280px;max-width:280px;padding:8px 12px;box-shadow:1px 0 0 var(--linea)}
-.matriz thead .col-prod{z-index:3;background:#F8F9F7}
-.matriz .col-total{position:sticky;left:280px;z-index:1;background:#F3F7F4;box-shadow:1px 0 0 var(--linea)}
-.matriz thead .col-total{z-index:3}
-.matriz .suc-h{writing-mode:vertical-rl;transform:rotate(180deg);height:150px;width:46px;padding:10px 0;display:flex;align-items:center;justify-content:flex-start;font-weight:500;font-size:12.5px;color:var(--tinta)}
-.matriz .suc-h.error{color:var(--tomate)}
-.matriz .total-h{padding:10px 12px;display:block;height:150px;display:flex;align-items:flex-end}
-.celda{display:block;width:100%;min-width:62px;border:0;background:transparent;padding:8px 8px;text-align:right;cursor:pointer;position:relative;font-size:14px}
-.celda:hover{outline:2px solid var(--albahaca);outline-offset:-2px}
-.celda.cero{color:var(--tinta-3)}
-.celda.neg{color:var(--tomate);font-weight:600}
-.celda .marca-aj{position:absolute;top:3px;left:4px;width:7px;height:7px;border-radius:50%;background:var(--ambar)}
-.celda .transito{display:block;font-size:11px;color:var(--azul);line-height:1}
-.matriz .nom{font-weight:500;line-height:1.25}
-.matriz .cod{font-size:12px;color:var(--tinta-3)}
-.matriz td.total{padding:8px 12px;text-align:right;font-weight:600}
-.leyenda{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--tinta-2);margin-top:10px}
-.leyenda i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:6px}
+/* ── Matriz consolidada ───────────── */
+.matriz{max-height:calc(100vh - 250px);font-size:13.5px}
+.matriz table{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0}
+.matriz th,.matriz td{padding:0;border-bottom:1px solid var(--linea-2);background:var(--papel)}
+.matriz thead th{position:sticky;z-index:2;background:#F6F7F4;font-weight:600;color:var(--tinta-2);font-size:12px}
+.matriz thead tr.bandas th{top:0;height:26px;padding:0 8px;text-align:left;border-bottom:0;color:var(--tinta);font-size:11.5px;letter-spacing:.02em}
+.matriz thead tr.bandas th.banda{border-left:2px solid var(--papel);background:#EDF1EC}
+.matriz thead tr.cols th{top:var(--top-cols,0px);height:46px;vertical-align:bottom;padding:6px 8px;border-bottom:1px solid var(--linea)}
+.matriz .fijo{position:sticky;z-index:1}
+.matriz thead .fijo{z-index:4}
+.matriz .c-prod{left:0;width:270px;min-width:270px;max-width:270px}
+.matriz .c-tot{left:270px;width:88px;min-width:88px;text-align:right}
+.matriz .c-val{left:358px;width:104px;min-width:104px;text-align:right;box-shadow:inset -1px 0 0 var(--linea)}
+.matriz td.c-tot{background:#F5F8F5;font-weight:600}
+.matriz td.c-val{background:#F5F8F5;color:var(--tinta-2)}
+.matriz td.c-prod,.matriz td.c-tot,.matriz td.c-val{padding:0 10px;height:34px}
+.matriz th.suc{width:86px;min-width:86px;max-width:86px;font-size:11.5px;text-align:right;line-height:1.2;white-space:normal}
+.matriz th.suc span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.matriz th.ini-grupo,.matriz td.ini-grupo{border-left:2px solid var(--linea)}
+.matriz th.ordenable{cursor:pointer;user-select:none}
+.matriz th.ordenable:hover{color:var(--tinta)}
+.matriz th .flecha{font-size:10px;margin-left:3px}
+.prod-l{display:flex;align-items:baseline;gap:8px;min-width:0}
+.prod-l .nom{font-weight:500;color:var(--tinta);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.prod-l .cod{font-size:11.5px;color:var(--tinta-3);white-space:nowrap;flex:none}
+.matriz tr.dep td{background:#F1F4F0;height:30px;padding:0 10px;font-size:12.5px;color:var(--tinta-2);border-bottom:1px solid var(--linea)}
+.matriz tr.dep .dep-b{position:sticky;left:0;display:inline-flex;align-items:center;gap:8px;border:0;background:none;padding:0;cursor:pointer;color:var(--tinta);font-weight:600;font-size:12.5px}
+.matriz tr.dep .dep-b i{display:inline-block;transition:transform .15s;font-style:normal;color:var(--tinta-3)}
+.matriz tr.dep.cerrado .dep-b i{transform:rotate(-90deg)}
+@media (prefers-reduced-motion:reduce){.matriz tr.dep .dep-b i{transition:none}}
+.matriz tbody tr:not(.dep):hover td{background:#F7FAF7}
+.matriz tbody tr:not(.dep):hover td.c-tot,.matriz tbody tr:not(.dep):hover td.c-val{background:#EEF4EF}
+.celda{display:block;width:100%;height:34px;border:0;background:transparent;padding:0 8px;text-align:right;cursor:pointer;position:relative;font:inherit;color:var(--tinta)}
+.celda:hover,.celda:focus-visible{outline:2px solid var(--albahaca);outline-offset:-2px}
+.celda.nomaneja{cursor:default;background:repeating-linear-gradient(135deg,transparent 0 5px,#F1F2EF 5px 6px)}
+.celda.nomaneja:hover{outline:0}
+.celda.agotado{color:#9A2E1E;background:#FBEDEA;font-weight:600}
+.celda.neg{color:#fff;background:var(--tomate);font-weight:600}
+.celda .marca-aj{position:absolute;top:4px;left:5px;width:6px;height:6px;border-radius:50%;background:var(--ambar)}
+.celda .transito{position:absolute;bottom:2px;right:8px;font-size:10px;color:var(--azul);line-height:1;font-weight:600}
+.matriz td.neg-t{color:var(--tomate)}
+.barra-inv{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.barra-inv .sep{flex:1}
+.interruptor{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--tinta-2);cursor:pointer;user-select:none}
+.interruptor input{width:16px;height:16px;accent-color:var(--albahaca)}
+.leyenda{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;color:var(--tinta-2);margin-top:10px;align-items:center}
+.leyenda i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:6px;border:1px solid var(--linea)}
 
 /* ── Estados ───────────────────────── */
 .est{display:inline-block;padding:1px 9px;border-radius:20px;font-size:12.5px;font-weight:600;white-space:nowrap}
@@ -291,7 +315,7 @@ const esRevisor = () => ['admin', 'supervisor'].includes(S.user?.rol);
 const S = {
   token: null, user: null, sucursales: [], proveedores: [], motivos: [],
   vista: 'inventario', consolidado: null,
-  filtroInv: { q: '', departamento: '', grupo: 'todas', modo: 'sucursales' },
+  filtroInv: { q: '', departamento: '', grupo: 'todas', modo: 'sucursales', ocultarCeros: true, soloAgotados: false, orden: 'departamento', dir: 1, cerrados: [] },
 };
 try { S.token = localStorage.getItem('mz_token'); } catch {}
 
@@ -341,11 +365,18 @@ function opcionesProveedor(sel) {
 
 // Grupos de sucursales según su nombre
 function grupoDe(nombre) {
+  if (/cedis/i.test(nombre)) return 'cedis';
+  if (/burger/i.test(nombre)) return 'burger';
   if (/^PTG/i.test(nombre)) return 'ptg';
-  if (/mozar|mozz/i.test(nombre)) return 'mozzarella';
-  return 'otras';
+  return 'pizzerias';
 }
-const GRUPOS = [['todas', 'Todas'], ['mozzarella', 'Mozzarella'], ['ptg', 'PTG'], ['otras', 'Otras']];
+const GRUPOS = [['todas', 'Todas'], ['pizzerias', 'Pizzerías'], ['ptg', 'PTG'], ['burger', 'Burger'], ['cedis', 'CEDIS']];
+const NOMBRE_GRUPO = { pizzerias: 'Pizzerías', ptg: 'PTG', burger: 'Burger', cedis: 'CEDIS' };
+// Nombre corto para el encabezado: sin el prefijo de la marca
+function nombreCorto(n) {
+  if (/burger/i.test(n)) return n.replace(/^.*burger\s*-\s*/i, 'Burger ');
+  return n.replace(/^(PTG|Mozarellas? Pizza)\s*-\s*/i, '').replace(/^CEDIS\s*-\s*/i, 'CEDIS ');
+}
 
 // ════════════════════════════════════════════════════════════════
 //  Panel lateral (detalle / formularios)
@@ -555,15 +586,24 @@ async function vInventario() {
     `${esCompras() ? `<button class="btn" id="b-sync">Actualizar desde Wansoft</button>` : ''}
      <button class="btn" id="b-csv">Descargar CSV</button>
      <button class="btn primario" id="b-pedir">Nueva orden de compra</button>`) +
-  `<div class="filtros">
-     <input type="search" id="f-q" placeholder="Buscar producto o código" value="${esc(S.filtroInv.q)}" aria-label="Buscar producto">
+  `<div class="barra-inv">
+     <input type="search" id="f-q" placeholder="Buscar producto o código" value="${esc(S.filtroInv.q)}" aria-label="Buscar producto" style="width:240px">
      <select id="f-dep" aria-label="Departamento"><option value="">Todos los departamentos</option></select>
      ${!acotado() ? `<div class="chips" role="group" aria-label="Grupo de sucursales">${GRUPOS.map(([k, t]) =>
         `<button class="chip" data-g="${k}" aria-pressed="${S.filtroInv.grupo === k}">${t}</button>`).join('')}</div>` : ''}
-     <div class="chips" role="group" aria-label="Vista" style="margin-left:auto">
+     <span class="sep"></span>
+     <div class="chips" role="group" aria-label="Vista">
        <button class="chip" data-m="sucursales" aria-pressed="${S.filtroInv.modo === 'sucursales'}">Por sucursal</button>
        <button class="chip" data-m="totales" aria-pressed="${S.filtroInv.modo === 'totales'}">Solo totales</button>
      </div>
+   </div>
+   <div class="barra-inv">
+     <label class="interruptor"><input type="checkbox" id="f-ceros" ${S.filtroInv.ocultarCeros ? 'checked' : ''}> Ocultar productos sin existencia</label>
+     <label class="interruptor"><input type="checkbox" id="f-agot" ${S.filtroInv.soloAgotados ? 'checked' : ''}> Solo agotados en alguna sucursal</label>
+     <span class="sep"></span>
+     <label class="interruptor">Ordenar por
+       <select id="f-orden" aria-label="Ordenar por">${[['departamento', 'Departamento'], ['nombre', 'Nombre'], ['total', 'Existencia total'], ['valor', 'Valor'], ['agotados', 'Más agotados']].map(([k, t]) =>
+         `<option value="${k}" ${S.filtroInv.orden === k ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
    </div>
    <div id="inv-cont"><div class="vacio"><span class="carga"></span></div></div>`;
 
@@ -585,6 +625,9 @@ async function vInventario() {
   $('#f-dep').addEventListener('change', e => { S.filtroInv.departamento = e.target.value; cargarConsolidado(); });
   $$('[data-g]').forEach(b => b.addEventListener('click', () => { S.filtroInv.grupo = b.dataset.g; $$('[data-g]').forEach(x => x.setAttribute('aria-pressed', x === b)); pintarMatriz(); }));
   $$('[data-m]').forEach(b => b.addEventListener('click', () => { S.filtroInv.modo = b.dataset.m; $$('[data-m]').forEach(x => x.setAttribute('aria-pressed', x === b)); pintarMatriz(); }));
+  $('#f-ceros').onchange = e => { S.filtroInv.ocultarCeros = e.target.checked; pintarMatriz(); };
+  $('#f-agot').onchange = e => { S.filtroInv.soloAgotados = e.target.checked; pintarMatriz(); };
+  $('#f-orden').onchange = e => { S.filtroInv.orden = e.target.value; S.filtroInv.dir = ['total', 'valor', 'agotados'].includes(e.target.value) ? -1 : 1; pintarMatriz(); };
   if (conClaves.length || !esAdmin()) cargarConsolidado();
 }
 
@@ -604,87 +647,166 @@ function sucursalesVisibles() {
   const d = S.consolidado;
   // Solo sucursales conectadas: con inventario sincronizado o con error de conexión
   const conDatos = new Set(d.productos.flatMap(p => Object.keys(p.por).map(Number)));
+  const orden = ['pizzerias', 'ptg', 'burger', 'cedis'];
   return d.sucursales.filter(s => (conDatos.has(s.id) || s.ultimo_error) &&
-    (S.filtroInv.grupo === 'todas' || grupoDe(s.nombre) === S.filtroInv.grupo));
+    (S.filtroInv.grupo === 'todas' || grupoDe(s.nombre) === S.filtroInv.grupo))
+    .sort((a, b) => orden.indexOf(grupoDe(a.nombre)) - orden.indexOf(grupoDe(b.nombre)) || a.nombre.localeCompare(b.nombre, 'es'));
+}
+
+function productosVisibles(ids) {
+  const f = S.filtroInv;
+  let prods = S.consolidado.productos.map(p => {
+    const total = ids.reduce((a, id) => a + (p.por[id] || 0), 0);
+    const maneja = ids.filter(id => id in p.por);
+    return { ...p, totalVis: total, valorVis: p.costo != null ? total * p.costo : null, maneja,
+      agotadas: maneja.filter(id => p.por[id] <= 0).length, negativas: maneja.filter(id => p.por[id] < 0).length };
+  }).filter(p => p.maneja.length);
+  if (f.ocultarCeros) prods = prods.filter(p => p.maneja.some(id => p.por[id] !== 0));
+  if (f.soloAgotados) prods = prods.filter(p => p.agotadas > 0);
+  const nom = p => String(p.nombre || p.codigo);
+  const cmp = {
+    departamento: (a, b) => String(a.departamento || '~').localeCompare(String(b.departamento || '~')) || nom(a).localeCompare(nom(b), 'es'),
+    nombre: (a, b) => f.dir * nom(a).localeCompare(nom(b), 'es'),
+    total: (a, b) => f.dir * (a.totalVis - b.totalVis),
+    valor: (a, b) => f.dir * ((a.valorVis || 0) - (b.valorVis || 0)),
+    agotados: (a, b) => f.dir * (a.agotadas - b.agotadas) || nom(a).localeCompare(nom(b), 'es'),
+  }[f.orden] || ((a, b) => 0);
+  return prods.sort(cmp);
 }
 
 function pintarMatriz() {
   const d = S.consolidado;
   if (!d || !$('#inv-cont')) return;
+  const f = S.filtroInv;
   const sucs = sucursalesVisibles();
   const ids = sucs.map(s => s.id);
-  const prods = d.productos.map(p => {
-    const total = ids.reduce((a, id) => a + (p.por[id] || 0), 0);
-    return { ...p, totalVis: total, valorVis: p.costo != null ? total * p.costo : null };
-  }).filter(p => ids.some(id => id in p.por));
+  const prods = productosVisibles(ids);
 
   if (!prods.length) {
-    $('#inv-cont').innerHTML = `<div class="caja vacio"><b>Sin productos</b>${S.filtroInv.q || S.filtroInv.departamento ? 'Ningún producto coincide con la búsqueda.' : 'Actualiza desde Wansoft para traer el inventario.'}</div>`;
+    $('#inv-cont').innerHTML = `<div class="caja vacio"><b>Sin productos</b>${f.q || f.departamento || f.soloAgotados ? 'Ningún producto coincide con los filtros.' : 'Todavía no hay existencias para estas sucursales.'}</div>`;
     return;
   }
   const valor = prods.reduce((a, p) => a + (p.valorVis || 0), 0);
+  const agotados = prods.filter(p => p.agotadas > 0).length;
+  const negativos = prods.reduce((a, p) => a + p.negativas, 0);
   const ajustes = prods.reduce((a, p) => a + Object.keys(p.ajuste).filter(id => ids.includes(+id)).length, 0);
-  const negativos = prods.reduce((a, p) => a + ids.filter(id => (p.por[id] || 0) < 0).length, 0);
   const transito = prods.reduce((a, p) => a + Object.keys(p.transito).filter(id => ids.includes(+id)).length, 0);
 
   const resumen = `<div class="resumen">
-    <div><b>${fmt(prods.length)}</b><span>Productos</span></div>
+    <div><b>${fmt(prods.length)}</b><span>Productos en la vista · ${sucs.length} sucursal${sucs.length === 1 ? '' : 'es'}</span></div>
     <div><b>${dinero(valor)}</b><span>Valor del inventario a costo</span></div>
-    <div><b>${fmt(sucs.length)}</b><span>Sucursales en la vista</span></div>
-    <div><b>${fmt(ajustes)}</b><span>Ajustes por capturar en Wansoft</span></div>
-    <div><b>${fmt(transito)}</b><span>Productos en camino</span></div>
-    ${negativos ? `<div><b style="color:var(--tomate)">${fmt(negativos)}</b><span>Existencias negativas</span></div>` : ''}
+    <div><b style="color:${agotados ? '#9A2E1E' : 'inherit'}">${fmt(agotados)}</b><span>Productos agotados en al menos una sucursal</span></div>
+    ${negativos ? `<div><b style="color:var(--tomate)">${fmt(negativos)}</b><span>Existencias negativas por revisar</span></div>` : ''}
+    ${ajustes ? `<div><b>${fmt(ajustes)}</b><span>Ajustes por capturar en Wansoft</span></div>` : ''}
+    ${transito ? `<div><b>${fmt(transito)}</b><span>Productos en camino</span></div>` : ''}
   </div>`;
 
-  if (S.filtroInv.modo === 'totales') {
-    $('#inv-cont').innerHTML = resumen + `<div class="caja tabla-scroll"><table>
-      <thead><tr><th>Producto</th><th>Departamento</th><th>Unidad</th><th class="num">Existencia total</th><th class="num">Costo</th><th class="num">Valor</th><th class="num">Sucursales con existencia</th></tr></thead>
-      <tbody>${prods.map(p => `<tr><td><b>${esc(p.nombre || p.codigo)}</b><br><span class="muted">${esc(p.codigo)}</span></td>
+  const flecha = k => f.orden === k ? `<span class="flecha">${f.dir > 0 ? '▲' : '▼'}</span>` : '';
+  const porDep = f.orden === 'departamento';
+
+  if (f.modo === 'totales') {
+    $('#inv-cont').innerHTML = resumen + `<div class="caja tabla-scroll"><table class="ancho" style="min-width:900px">
+      <thead><tr><th class="ordenable" data-o="nombre">Producto${flecha('nombre')}</th><th class="ordenable" data-o="departamento">Departamento${flecha('departamento')}</th><th>Unidad</th>
+        <th class="num ordenable" data-o="total">Existencia total${flecha('total')}</th><th class="num">Costo</th><th class="num ordenable" data-o="valor">Valor${flecha('valor')}</th>
+        <th class="num">Con existencia</th><th class="num ordenable" data-o="agotados">Agotado en${flecha('agotados')}</th></tr></thead>
+      <tbody>${prods.map(p => `<tr><td><b>${esc(p.nombre || p.codigo)}</b> <span class="muted" style="font-size:12px">${esc(p.codigo)}</span></td>
         <td>${esc(p.departamento || '—')}</td><td>${esc(p.unidad || '')}</td>
         <td class="num ${p.totalVis < 0 ? 'dif-neg' : ''}"><b>${fmt(p.totalVis)}</b></td><td class="num">${dinero(p.costo)}</td><td class="num">${dinero(p.valorVis)}</td>
-        <td class="num">${ids.filter(id => (p.por[id] || 0) > 0).length} de ${ids.length}</td></tr>`).join('')}</tbody></table></div>`;
+        <td class="num">${p.maneja.length - p.agotadas} de ${p.maneja.length}</td>
+        <td class="num">${p.agotadas ? `<span class="dif-neg">${p.agotadas} sucursal${p.agotadas === 1 ? '' : 'es'}</span>` : '—'}</td></tr>`).join('')}</tbody></table></div>`;
+    ordenarPorEncabezado();
     return;
   }
 
-  // Sombreado por fila: más intenso donde hay más existencia
+  // Encabezado en dos niveles: marca y sucursal (nombre corto)
+  const bandas = [];
+  for (const s of sucs) {
+    const g = grupoDe(s.nombre), u = bandas[bandas.length - 1];
+    if (u && u.g === g) u.n++; else bandas.push({ g, n: 1 });
+  }
+  const inicioGrupo = new Set(); let k = 0;
+  for (const b of bandas) { inicioGrupo.add(sucs[k].id); k += b.n; }
+  const verBandas = f.grupo === 'todas' && bandas.length > 1;
+
   const celda = (p, s) => {
-    const v = p.por[s.id];
-    const aj = p.ajuste[s.id], tr = p.transito[s.id];
-    const max = Math.max(...ids.map(id => p.por[id] || 0), 1);
-    const a = v > 0 ? 0.08 + 0.42 * (v / max) : 0;
-    const bg = v > 0 ? `background:rgba(45,106,77,${a.toFixed(3)})` : '';
-    const cls = v == null ? 'cero' : v < 0 ? 'neg' : v === 0 ? 'cero' : '';
-    const tip = `${s.nombre}: ${v == null ? 'no lo maneja' : fmt(v) + ' ' + (p.unidad || '')}${aj ? ` · ajuste pendiente ${aj > 0 ? '+' : ''}${fmt(aj)}` : ''}${tr ? ` · en camino ${fmt(tr)}` : ''}`;
-    return `<td><button class="celda ${cls}" style="${bg}" data-c="${esc(p.codigo)}" data-s="${s.id}" title="${esc(tip)}" aria-label="${esc(p.nombre + ', ' + tip)}">
-      ${aj ? '<span class="marca-aj"></span>' : ''}${v == null ? '·' : fmt(v)}${tr ? `<span class="transito">+${fmt(tr)}</span>` : ''}</button></td>`;
+    const v = p.por[s.id], aj = p.ajuste[s.id], tr = p.transito[s.id];
+    const ini = inicioGrupo.has(s.id) ? ' ini-grupo' : '';
+    if (v == null) return `<td class="${ini}"><span class="celda nomaneja" title="${esc(s.nombre)} no maneja este producto"></span></td>`;
+    const cls = v < 0 ? 'neg' : v === 0 ? 'agotado' : '';
+    const tip = `${s.nombre}: ${fmt(v)} ${p.unidad || ''}${v === 0 ? ' (agotado)' : ''}${aj ? ` · ajuste pendiente ${aj > 0 ? '+' : ''}${fmt(aj)}` : ''}${tr ? ` · en camino ${fmt(tr)}` : ''}`;
+    return `<td class="${ini}"><button class="celda ${cls}" data-c="${esc(p.clave || p.codigo)}" data-s="${s.id}" title="${esc(tip)}" aria-label="${esc(p.nombre + ', ' + tip)}">${aj ? '<span class="marca-aj"></span>' : ''}${fmt(v)}${tr ? `<span class="transito">+${fmt(tr)}</span>` : ''}</button></td>`;
   };
+  const fila = p => `<tr>
+    <td class="fijo c-prod" title="${esc(p.nombre)} · ${esc(p.codigo)} · ${esc(p.unidad || '')}"><div class="prod-l"><span class="nom">${esc(p.nombre || p.codigo)}</span><span class="cod">${esc(p.codigo)} · ${esc(p.unidad || '')}</span></div></td>
+    <td class="fijo c-tot num ${p.totalVis < 0 ? 'neg-t' : ''}">${fmt(p.totalVis)}</td>
+    <td class="fijo c-val num">${p.valorVis != null ? dinero(p.valorVis) : '—'}</td>
+    ${sucs.map(s => celda(p, s)).join('')}</tr>`;
 
-  $('#inv-cont').innerHTML = resumen + `<div class="caja tabla-scroll matriz"><table>
-    <thead><tr><th class="col-prod" style="vertical-align:bottom;padding:10px 12px">Producto</th>
-      <th class="col-total"><span class="total-h">Total</span></th>
-      ${sucs.map(s => `<th title="${esc(s.ultimo_error || 'Actualizado ' + hace(s.ultimo_sync))}"><span class="suc-h ${s.ultimo_error ? 'error' : ''}">${esc(s.nombre)}</span></th>`).join('')}
-    </tr></thead>
-    <tbody>${prods.map(p => `<tr>
-      <td class="col-prod"><div class="nom">${esc(p.nombre || p.codigo)}</div><div class="cod">${esc(p.codigo)} · ${esc(p.unidad || '')}</div></td>
-      <td class="col-total total ${p.totalVis < 0 ? 'dif-neg' : ''}">${fmt(p.totalVis)}</td>
-      ${sucs.map(s => celda(p, s)).join('')}</tr>`).join('')}</tbody></table></div>
-    <div class="leyenda"><span><i style="background:rgba(45,106,77,.45)"></i>Más existencia en la fila</span>
-      <span><i style="background:var(--ambar);border-radius:50%;width:8px;height:8px"></i>Ajuste pendiente de capturar</span>
-      <span style="color:var(--azul)">+n  en camino por órdenes enviadas</span><span>· la sucursal no maneja el producto</span></div>`;
+  let cuerpo = '';
+  if (porDep) {
+    const grupos = new Map();
+    for (const p of prods) { const k = p.departamento || 'Sin departamento'; if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(p); }
+    for (const [dep, ps] of grupos) {
+      const cerrado = f.cerrados.includes(dep);
+      const val = ps.reduce((a, p) => a + (p.valorVis || 0), 0), ag = ps.filter(p => p.agotadas > 0).length;
+      cuerpo += `<tr class="dep${cerrado ? ' cerrado' : ''}"><td colspan="${3 + sucs.length}"><button class="dep-b" data-dep="${esc(dep)}" aria-expanded="${!cerrado}"><i>▾</i>${esc(dep)}
+        <span class="muted" style="font-weight:400">${ps.length} producto${ps.length === 1 ? '' : 's'} · ${dinero(val)}${ag ? ` · <span style="color:#9A2E1E">${ag} agotado${ag === 1 ? '' : 's'}</span>` : ''}</span></button></td></tr>`;
+      if (!cerrado) cuerpo += ps.map(fila).join('');
+    }
+  } else cuerpo = prods.map(fila).join('');
 
-  $('#inv-cont .matriz').addEventListener('click', e => {
-    const b = e.target.closest('.celda');
+  $('#inv-cont').innerHTML = resumen + `<div class="caja tabla-scroll matriz" style="--top-cols:${verBandas ? '26px' : '0px'}"><table>
+    <thead>
+      ${verBandas ? `<tr class="bandas"><th class="fijo c-prod"></th><th class="fijo c-tot"></th><th class="fijo c-val"></th>
+        ${bandas.map(b => `<th class="banda" colspan="${b.n}">${esc(NOMBRE_GRUPO[b.g] || b.g)}</th>`).join('')}</tr>` : ''}
+      <tr class="cols">
+        <th class="fijo c-prod ordenable" data-o="nombre" style="text-align:left">Producto${flecha('nombre')}</th>
+        <th class="fijo c-tot ordenable" data-o="total">Total${flecha('total')}</th>
+        <th class="fijo c-val ordenable" data-o="valor">Valor${flecha('valor')}</th>
+        ${sucs.map(s => `<th class="suc${inicioGrupo.has(s.id) ? ' ini-grupo' : ''}" title="${esc(s.nombre)} · ${s.ultimo_sync ? 'existencias al ' + esc(fechaHora(s.ultimo_sync)) : 'sin datos'}"><span>${esc(nombreCorto(s.nombre))}</span></th>`).join('')}
+      </tr></thead>
+    <tbody>${cuerpo}</tbody></table></div>
+    <div class="leyenda">
+      <span><i style="background:#FBEDEA;border-color:#F0C9C1"></i>Agotado</span>
+      <span><i style="background:var(--tomate);border-color:var(--tomate)"></i>Existencia negativa</span>
+      <span><i style="background:repeating-linear-gradient(135deg,#fff 0 5px,#E6E8E3 5px 6px)"></i>La sucursal no maneja el producto</span>
+      <span><i style="background:var(--ambar);border-radius:50%;width:8px;height:8px;border:0"></i>Ajuste pendiente</span>
+      <span style="color:var(--azul);font-weight:600">+n</span><span style="margin-left:-12px">en camino</span>
+      <span class="muted">Toca una celda para ajustar o pedir</span>
+    </div>`;
+
+  const m = $('#inv-cont .matriz');
+  m.addEventListener('click', e => {
+    const dep = e.target.closest('.dep-b');
+    if (dep) {
+      const k = dep.dataset.dep, c = S.filtroInv.cerrados;
+      S.filtroInv.cerrados = c.includes(k) ? c.filter(x => x !== k) : [...c, k];
+      const top = m.scrollTop; pintarMatriz(); $('#inv-cont .matriz').scrollTop = top;
+      return;
+    }
+    const b = e.target.closest('button.celda');
     if (b) popoverCelda(b);
+  });
+  ordenarPorEncabezado();
+}
+
+function ordenarPorEncabezado() {
+  $$('#inv-cont th.ordenable').forEach(th => th.onclick = () => {
+    const f = S.filtroInv, k = th.dataset.o;
+    if (f.orden === k && k !== 'departamento') f.dir = -f.dir;
+    else { f.orden = k; f.dir = ['total', 'valor', 'agotados'].includes(k) ? -1 : 1; }
+    const sel = $('#f-orden'); if (sel) sel.value = k;
+    pintarMatriz();
   });
 }
 
 let popEl = null;
 function cerrarPopover() { popEl?.remove(); popEl = null; }
-document.addEventListener('mousedown', e => { if (popEl && !popEl.contains(e.target) && !e.target.closest('.celda')) cerrarPopover(); });
+document.addEventListener('mousedown', e => { if (popEl && !popEl.contains(e.target) && !e.target.closest('button.celda')) cerrarPopover(); });
 
 function popoverCelda(btn) {
   cerrarPopover();
-  const p = S.consolidado.productos.find(x => x.codigo === btn.dataset.c);
+  const p = S.consolidado.productos.find(x => (x.clave || x.codigo) === btn.dataset.c);
   const s = S.consolidado.sucursales.find(x => x.id === +btn.dataset.s);
   const v = p.por[s.id];
   popEl = document.createElement('div');
@@ -710,9 +832,8 @@ function descargarCSV() {
   const sucs = sucursalesVisibles();
   const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
   const filas = [['Código', 'Producto', 'Unidad', 'Departamento', 'Costo', 'Total', ...sucs.map(s => s.nombre)].map(q).join(',')];
-  for (const p of d.productos) {
-    const tot = sucs.reduce((a, s) => a + (p.por[s.id] || 0), 0);
-    filas.push([p.codigo, p.nombre, p.unidad, p.departamento, p.costo, tot, ...sucs.map(s => p.por[s.id] ?? '')].map(q).join(','));
+  for (const p of productosVisibles(sucs.map(s => s.id))) {
+    filas.push([p.codigo, p.nombre, p.unidad, p.departamento, p.costo, p.totalVis, ...sucs.map(s => p.por[s.id] ?? '')].map(q).join(','));
   }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['﻿' + filas.join('\n')], { type: 'text/csv' }));
